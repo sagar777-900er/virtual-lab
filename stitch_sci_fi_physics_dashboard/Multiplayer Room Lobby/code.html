@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>COLLAB_CMD | Multiplayer Collaboration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#201f1f",
+                        "on-tertiary-fixed-variant": "#740044",
+                        "surface-bright": "#2c2c2c",
+                        "primary-container": "#c284ff",
+                        "on-primary-fixed-variant": "#430076",
+                        "on-background": "#ffffff",
+                        "on-secondary": "#594700",
+                        "on-secondary-fixed-variant": "#645000",
+                        "on-primary-container": "#360061",
+                        "surface": "#0e0e0e",
+                        "surface-container-highest": "#262626",
+                        "surface-container-lowest": "#000000",
+                        "error-container": "#a70138",
+                        "on-error-container": "#ffb2b9",
+                        "on-primary": "#47007c",
+                        "inverse-on-surface": "#565554",
+                        "secondary-fixed": "#fed01b",
+                        "primary": "#cc97ff",
+                        "secondary-fixed-dim": "#eec200",
+                        "outline": "#777575",
+                        "primary-fixed": "#c284ff",
+                        "primary-dim": "#9c48ea",
+                        "outline-variant": "#494847",
+                        "on-tertiary": "#4b002a",
+                        "surface-tint": "#cc97ff",
+                        "inverse-surface": "#fcf8f8",
+                        "on-error": "#490013",
+                        "tertiary-fixed": "#ff8cbc",
+                        "surface-variant": "#262626",
+                        "secondary-container": "#735c00",
+                        "tertiary-dim": "#ff67ad",
+                        "on-secondary-fixed": "#433500",
+                        "on-tertiary-fixed": "#37001d",
+                        "on-tertiary-container": "#2f0018",
+                        "tertiary-fixed-dim": "#ff73b1",
+                        "primary-fixed-dim": "#b971ff",
+                        "inverse-primary": "#842cd3",
+                        "surface-dim": "#0e0e0e",
+                        "secondary-dim": "#eec200",
+                        "tertiary": "#ff6daf",
+                        "error-dim": "#d73357",
+                        "on-primary-fixed": "#000000",
+                        "on-surface": "#ffffff",
+                        "error": "#ff6e84",
+                        "tertiary-container": "#fa53a4",
+                        "surface-container": "#1a1919",
+                        "background": "#0e0e0e",
+                        "on-surface-variant": "#adaaaa",
+                        "on-secondary-container": "#fff7e9",
+                        "surface-container-low": "#131313",
+                        "secondary": "#fed01b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card {
+            background: rgba(38, 38, 38, 0.2);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(168, 85, 247, 0.05);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.08);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .data-pulse {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: #ff6daf;
+            box-shadow: 0 0 8px #ff6daf;
+        }
+        .glow-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #cc97ff, transparent);
+        }
+    </style>
+</head>
+<body class="flex overflow-hidden">
+<!-- SideNavBar Anchor -->
+<aside class="hidden md:flex flex-col h-screen w-64 bg-neutral-950 dark:bg-black/40 backdrop-blur-2xl border-r border-white/5 py-6 shrink-0 z-50">
+<div class="px-6 mb-8">
+<div class="text-purple-500 font-black tracking-widest text-xl mb-1">COLLAB_CMD</div>
+<div class="text-[10px] uppercase tracking-[0.2em] text-neutral-500 font-bold">Protocol v4.2</div>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="px-4 py-2 text-neutral-500 flex items-center space-x-3 transition-colors cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 duration-200">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+<span class="font-headline text-xs uppercase tracking-widest font-semibold">Dashboard</span>
+</div>
+<div class="px-4 py-2 text-purple-400 border-r-2 border-purple-500 bg-purple-500/10 flex items-center space-x-3 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-lg">meeting_room</span>
+<span class="font-headline text-xs uppercase tracking-widest font-semibold">Rooms</span>
+</div>
+<div class="px-4 py-2 text-neutral-500 flex items-center space-x-3 transition-colors cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 duration-200">
+<span class="material-symbols-outlined text-lg">groups</span>
+<span class="font-headline text-xs uppercase tracking-widest font-semibold">Participants</span>
+</div>
+<div class="px-4 py-2 text-neutral-500 flex items-center space-x-3 transition-colors cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 duration-200">
+<span class="material-symbols-outlined text-lg">security</span>
+<span class="font-headline text-xs uppercase tracking-widest font-semibold">Permissions</span>
+</div>
+<div class="px-4 py-2 text-neutral-500 flex items-center space-x-3 transition-colors cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 duration-200">
+<span class="material-symbols-outlined text-lg">monitoring</span>
+<span class="font-headline text-xs uppercase tracking-widest font-semibold">Analytics</span>
+</div>
+<div class="px-4 py-2 text-neutral-500 flex items-center space-x-3 transition-colors cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 duration-200">
+<span class="material-symbols-outlined text-lg">settings_input_component</span>
+<span class="font-headline text-xs uppercase tracking-widest font-semibold">Settings</span>
+</div>
+</nav>
+<div class="px-6 mt-6">
+<button class="w-full py-2 bg-gradient-to-br from-primary to-primary-dim text-on-primary font-headline text-[10px] uppercase tracking-widest font-bold rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] active:scale-95 transition-transform">
+                Deploy New Room
+            </button>
+</div>
+<div class="mt-auto px-4 py-6 border-t border-white/5 space-y-1">
+<div class="px-4 py-2 text-neutral-500 flex items-center space-x-3 transition-colors cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 duration-200">
+<span class="material-symbols-outlined text-lg">help_center</span>
+<span class="font-headline text-xs uppercase tracking-widest font-semibold">Support</span>
+</div>
+<div class="px-4 py-2 text-neutral-500 flex items-center space-x-3 transition-colors cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 duration-200">
+<span class="material-symbols-outlined text-lg">power_settings_new</span>
+<span class="font-headline text-xs uppercase tracking-widest font-semibold">Disconnect</span>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar Anchor -->
+<header class="flex justify-between items-center w-full px-6 py-3 bg-neutral-950/80 backdrop-blur-xl z-50 shadow-[0_4px_20px_rgba(168,85,247,0.08)]">
+<div class="flex items-center space-x-8">
+<span class="text-xl font-bold tracking-tighter text-purple-500 uppercase font-headline">COLLAB_CMD</span>
+<div class="hidden lg:flex items-center bg-white/5 px-4 py-1.5 rounded-full border border-white/5">
+<span class="material-symbols-outlined text-neutral-400 text-lg mr-2">terminal</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm font-body placeholder:text-neutral-600 text-white w-64" placeholder="Execute protocol..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-6">
+<div class="flex items-center space-x-4">
+<span class="material-symbols-outlined text-neutral-400 cursor-pointer hover:text-purple-400 transition-colors">notifications</span>
+<span class="material-symbols-outlined text-neutral-400 cursor-pointer hover:text-purple-400 transition-colors">wifi_tethering</span>
+<span class="material-symbols-outlined text-neutral-400 cursor-pointer hover:text-purple-400 transition-colors">terminal</span>
+</div>
+<div class="flex items-center space-x-3 pl-4 border-l border-white/10">
+<div class="text-right hidden sm:block">
+<div class="text-xs font-bold font-headline text-white tracking-tight">ADMIN_NODE</div>
+<div class="text-[10px] text-purple-500 font-mono">ID: x99-void-sys</div>
+</div>
+<img alt="Administrator Avatar" class="w-10 h-10 rounded-full border-2 border-purple-500/30" data-alt="Modern high-tech profile portrait of a person with cybernetic details and glowing purple accent lighting against a black background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAdON8j0aZZzAd9CTYPgj4TqS2mTt5sYi2lyHyZF-M9Zgz1tW7ImDbwlNueHuc8h493tgZQIQ_VpfaBwA29LbfdrbkEefSGWFMh1_qEVhXZIBDx7j5WEdgP3YFhng3swJ_TQnpvN78fLb0hWgKxenEeoXc6jVRWx0Y5YlVQD92sZccrggNfU9piG5CuUWDzU946gO-C5L5C6oNTgjLbtj5sEBj1c1R057sV9VtAx_55A331GhSVsobbL0NghI_0wfRotGF_Ytjig"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto bg-[#050505] p-8">
+<div class="max-w-6xl mx-auto space-y-8">
+<!-- Room Settings Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<div class="flex items-center space-x-3 mb-2">
+<span class="data-pulse"></span>
+<span class="text-xs uppercase tracking-[0.3em] text-purple-500 font-headline font-bold">Node Session Active</span>
+</div>
+<h1 class="text-5xl font-black font-headline tracking-tighter text-white">Room Settings</h1>
+</div>
+<div class="flex space-x-4">
+<button class="px-6 py-2.5 bg-white/5 border border-white/10 text-neutral-300 font-headline text-xs uppercase tracking-widest font-bold rounded-sm hover:bg-white/10 transition-colors flex items-center">
+<span class="material-symbols-outlined text-sm mr-2">history</span> Log History
+                        </button>
+<button class="px-6 py-2.5 bg-gradient-to-br from-primary to-primary-dim text-on-primary font-headline text-xs uppercase tracking-widest font-bold rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] active:scale-95 transition-transform flex items-center">
+<span class="material-symbols-outlined text-sm mr-2">sync_alt</span> Synchronize
+                        </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Session Key Card -->
+<div class="lg:col-span-12 glass-card p-6 rounded-lg relative overflow-hidden">
+<div class="absolute top-0 right-0 p-8 opacity-10">
+<span class="material-symbols-outlined text-7xl text-purple-500">key</span>
+</div>
+<div class="relative z-10">
+<h3 class="text-[10px] uppercase tracking-widest text-neutral-500 font-headline font-bold mb-4">Unique Session Key</h3>
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="flex items-center space-x-4 bg-black/40 px-6 py-4 rounded border border-white/5 w-full sm:w-auto">
+<span class="text-3xl font-black font-headline tracking-widest text-purple-400">VOID - 9X2 - K91</span>
+<button class="p-2 text-neutral-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">content_copy</span>
+</button>
+</div>
+<div class="text-sm text-neutral-500 max-w-sm">
+                                    Share this secure hash to authorize external node participants into the kinetic workspace environment.
+                                </div>
+</div>
+</div>
+</div>
+<!-- Participants List -->
+<div class="lg:col-span-7 glass-card p-6 rounded-lg">
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline text-lg font-bold tracking-tight text-white flex items-center">
+<span class="material-symbols-outlined text-purple-500 mr-2">groups</span> Participants
+                            </h3>
+<span class="text-[10px] bg-purple-500/20 text-purple-400 px-3 py-1 rounded font-bold uppercase tracking-widest">4 Nodes Online</span>
+</div>
+<div class="space-y-4">
+<!-- Participant 1 -->
+<div class="flex items-center justify-between p-4 bg-neutral-900/50 rounded-sm border-l-2 border-secondary-fixed">
+<div class="flex items-center space-x-4">
+<div class="relative">
+<img alt="Admin_Node" class="w-12 h-12 rounded-sm grayscale group-hover:grayscale-0 transition-all border border-secondary-fixed/50" data-alt="Extreme close-up of a masculine cybernetic character with sharp features and a faint gold holographic crown above their head" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfm86gLeacEPKw_SPKHtSF4-Z0lEo0dL_vveNX4OPc4gR4qtvEfEIXTHc1OCztoFE0VcUz1UzpqMhxR8eXW8l67FOmr1mjXMfNVe6ljS6ZsWfhXrX3BnlAe4jD79rp4SohqvDmPwc7ufxX44XEIydXSg99e7hRA2W4pD4Y8dvX8Ghpbp6DN6bUtQVjhgdVt0X623THFgw7fibOFljbJz3BfkfPfBKpBRhB7EuYsmXU_heDW4n7PKSTRUr-IKPFwj9nvnWAqM0UhA"/>
+<div class="absolute -top-1 -left-1 text-secondary-fixed">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+</div>
+<div>
+<div class="flex items-center space-x-2">
+<span class="font-headline text-sm font-bold text-white tracking-tight">Admin_Node</span>
+<span class="text-[8px] bg-secondary-fixed/10 text-secondary-fixed px-1.5 py-0.5 rounded font-black uppercase">Host</span>
+</div>
+<div class="text-[10px] text-neutral-500 uppercase tracking-widest">0.02ms Latency</div>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+<span class="text-[10px] text-neutral-400 font-bold uppercase">Active</span>
+</div>
+</div>
+<!-- Participant 2 -->
+<div class="flex items-center justify-between p-4 bg-neutral-900/30 rounded-sm hover:bg-neutral-900/60 transition-colors">
+<div class="flex items-center space-x-4">
+<img alt="Observer_404" class="w-12 h-12 rounded-sm border border-white/5 opacity-80" data-alt="Digital portrait of a woman with neon pink reflections in her hair and cyber-glasses against a minimal dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ7HBIs2z-gWe1hAiUSD2Zk1m38E-3TvbRacUfxKO6Ctkwqiy7EiFxldd5MEzXkwcvx3x-yjKwLi1P5SinTljkDE_eZAQcVXR0ajFiEj3TgM9FK5bhImVL6uGTrTywR8xrBulJPM923S2_rlpuwW-sq-RcVCliaTuxeim3mKYr2xD0YvaCJ9uGRBIFLpuqSI8RuJcOVsn7QPzkbsyy-j8D8aTw3gxlSNYsAD0BcM0pHta6-qx5b3c3K-LvBLCOiRLRkDW5lWsdkw"/>
+<div>
+<div class="font-headline text-sm font-bold text-white tracking-tight">Observer_404</div>
+<div class="text-[10px] text-neutral-500 uppercase tracking-widest">12ms Latency</div>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+<span class="text-[10px] text-neutral-400 font-bold uppercase">Active</span>
+</div>
+</div>
+<!-- Participant 3 -->
+<div class="flex items-center justify-between p-4 bg-neutral-900/30 rounded-sm hover:bg-neutral-900/60 transition-colors">
+<div class="flex items-center space-x-4">
+<img alt="L-X_Visuals" class="w-12 h-12 rounded-sm border border-white/5 opacity-80" data-alt="Person with ethereal purple studio lighting and geometric patterns projected onto their face, high-contrast dark aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxCVfdeSe3xRFGl0Mb0opoaa1fSFEM59h88k6gRwviQEsIe5QJKB4bN5IVhoX21fFargROvAmD1ublqGUEgQ51Se9qmwINGcyoqKFqsIjOXN_t34K2lj2BVVFPhQtYamFjqoSjnbvBhLvjKH95xiLgEkqQEEymCPtf84na9EfqvQYPBR1xesjYP8kkz9O3DvUbxQQo9CiZRs4IdKrLVIesh56m2TT3V51ePcDJqwa9Y48qRq51tevq56mLijeRV03rQ7MshHLPUw"/>
+<div>
+<div class="font-headline text-sm font-bold text-white tracking-tight">L-X_Visuals</div>
+<div class="text-[10px] text-neutral-500 uppercase tracking-widest">24ms Latency</div>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+<span class="text-[10px] text-neutral-400 font-bold uppercase">Active</span>
+</div>
+</div>
+<!-- Participant 4 -->
+<div class="flex items-center justify-between p-4 bg-neutral-900/30 rounded-sm hover:bg-neutral-900/60 transition-colors">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-sm border border-white/5 bg-purple-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-purple-500">blur_on</span>
+</div>
+<div>
+<div class="font-headline text-sm font-bold text-white tracking-tight">Kinetic_Void</div>
+<div class="text-[10px] text-neutral-500 uppercase tracking-widest">Pending Sync...</div>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<div class="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_#eab308]"></div>
+<span class="text-[10px] text-neutral-400 font-bold uppercase">Idle</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Node Permissions Section -->
+<div class="lg:col-span-5 space-y-6">
+<div class="glass-card p-6 rounded-lg h-full">
+<h3 class="font-headline text-lg font-bold tracking-tight text-white mb-8 flex items-center">
+<span class="material-symbols-outlined text-purple-500 mr-2">security</span> Node Permissions
+                            </h3>
+<div class="space-y-8">
+<div class="flex items-center justify-between group">
+<div class="max-w-[70%]">
+<div class="font-headline text-sm font-bold text-white tracking-tight group-hover:text-purple-400 transition-colors">Edit Physics</div>
+<p class="text-[10px] text-neutral-500 mt-1">Allow participant nodes to modify global gravitational constants and friction.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-5 bg-neutral-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-400 after:border-neutral-400 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500 peer-checked:after:bg-white"></div>
+</label>
+</div>
+<div class="flex items-center justify-between group">
+<div class="max-w-[70%]">
+<div class="font-headline text-sm font-bold text-white tracking-tight group-hover:text-purple-400 transition-colors">Create Objects</div>
+<p class="text-[10px] text-neutral-500 mt-1">Permission to instantiate new visual entities into the collective void.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-5 bg-neutral-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-400 after:border-neutral-400 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500 peer-checked:after:bg-white"></div>
+</label>
+</div>
+<div class="flex items-center justify-between group opacity-50">
+<div class="max-w-[70%]">
+<div class="font-headline text-sm font-bold text-white tracking-tight">Root Protocol Override</div>
+<p class="text-[10px] text-neutral-500 mt-1">Restricted to Host ID only. Overrides all active workspace sub-layers.</p>
+</div>
+<span class="material-symbols-outlined text-neutral-600">lock</span>
+</div>
+</div>
+<div class="mt-12 pt-6 border-t border-white/5">
+<div class="p-4 bg-purple-500/5 border border-purple-500/20 rounded-sm">
+<div class="flex items-center space-x-2 text-purple-400 mb-2">
+<span class="material-symbols-outlined text-sm">info</span>
+<span class="text-[10px] uppercase font-bold tracking-widest font-headline">Security Notice</span>
+</div>
+<p class="text-[11px] text-neutral-400 leading-relaxed">
+                                        All protocol changes are logged to the blockchain node history for audit reconciliation. Unsaved changes will persist across re-entry.
+                                    </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Action Area -->
+<div class="flex flex-col items-center pt-8">
+<div class="glow-line w-full mb-12"></div>
+<button class="px-12 py-4 bg-neutral-900 border border-red-500/20 text-red-500 font-headline text-sm uppercase tracking-[0.2em] font-black rounded-sm hover:bg-red-500/10 hover:border-red-500/40 transition-all active:scale-95 group flex items-center">
+<span class="material-symbols-outlined mr-3 transition-transform group-hover:-translate-x-1">logout</span>
+                        Leave Workspace
+                    </button>
+<p class="text-[10px] text-neutral-600 mt-6 uppercase tracking-widest font-bold">Node Disconnection Protocol • Final Sequence 001</p>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Nav Anchor -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-neutral-950/90 backdrop-blur-xl border-t border-white/5 flex items-center justify-around px-4 z-[100]">
+<span class="material-symbols-outlined text-purple-500">dashboard</span>
+<span class="material-symbols-outlined text-neutral-500">meeting_room</span>
+<div class="w-12 h-12 bg-purple-500 rounded-full -mt-10 border-4 border-[#050505] flex items-center justify-center text-black shadow-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+</div>
+<span class="material-symbols-outlined text-neutral-500">groups</span>
+<span class="material-symbols-outlined text-neutral-500">settings</span>
+</nav>
+</body></html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PHYSX_VOID | Experiment Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#cc97ff",
+                        "on-primary-fixed": "#000000",
+                        "on-secondary-fixed": "#433500",
+                        "secondary": "#fed01b",
+                        "surface-container-high": "#201f1f",
+                        "primary-fixed-dim": "#b971ff",
+                        "outline-variant": "#494847",
+                        "tertiary": "#ff6daf",
+                        "secondary-container": "#735c00",
+                        "tertiary-fixed": "#ff8cbc",
+                        "tertiary-fixed-dim": "#ff73b1",
+                        "on-tertiary-fixed-variant": "#740044",
+                        "primary-container": "#c284ff",
+                        "on-primary-fixed-variant": "#430076",
+                        "secondary-fixed-dim": "#eec200",
+                        "on-primary": "#47007c",
+                        "on-tertiary-container": "#2f0018",
+                        "error-container": "#a70138",
+                        "surface-variant": "#262626",
+                        "surface-container-highest": "#262626",
+                        "on-primary-container": "#360061",
+                        "secondary-fixed": "#fed01b",
+                        "primary-fixed": "#c284ff",
+                        "error": "#ff6e84",
+                        "on-tertiary-fixed": "#37001d",
+                        "on-error": "#490013",
+                        "inverse-surface": "#fcf8f8",
+                        "on-surface": "#ffffff",
+                        "tertiary-container": "#fa53a4",
+                        "surface-container-lowest": "#000000",
+                        "on-secondary-fixed-variant": "#645000",
+                        "primary-dim": "#9c48ea",
+                        "surface": "#0e0e0e",
+                        "inverse-primary": "#842cd3",
+                        "on-surface-variant": "#adaaaa",
+                        "on-error-container": "#ffb2b9",
+                        "inverse-on-surface": "#565554",
+                        "surface-container": "#1a1919",
+                        "on-secondary": "#594700",
+                        "surface-tint": "#cc97ff",
+                        "surface-bright": "#2c2c2c",
+                        "tertiary-dim": "#ff67ad",
+                        "secondary-dim": "#eec200",
+                        "surface-dim": "#0e0e0e",
+                        "on-tertiary": "#4b002a",
+                        "outline": "#777575",
+                        "on-secondary-container": "#fff7e9",
+                        "on-background": "#ffffff",
+                        "surface-container-low": "#131313",
+                        "error-dim": "#d73357",
+                        "background": "#0e0e0e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-card { background: rgba(38, 38, 38, 0.2); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glow-purple { box-shadow: 0 0 20px rgba(168, 85, 247, 0.15); }
+        .data-pulse { width: 8px; height: 8px; border-radius: 50%; background-color: #ff6daf; box-shadow: 0 0 8px #ff6daf; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.4; transform: scale(0.9); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary/30">
+<!-- TopNavBar -->
+<nav class="bg-black/40 backdrop-blur-md font-['Space_Grotesk'] tracking-tight docked full-width top-0 sticky z-50 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.1)]">
+<div class="flex justify-between items-center w-full px-12 h-20 max-w-[1920px] mx-auto bg-zinc-900/50">
+<div class="text-2xl font-bold tracking-tighter text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">
+                PHYSX_VOID
+            </div>
+<div class="hidden md:flex items-center gap-10">
+<a class="text-purple-400 border-b-2 border-purple-500 pb-1 hover:text-purple-300 transition-colors duration-300" href="#">Lab</a>
+<a class="text-zinc-400 font-medium hover:text-purple-300 transition-colors duration-300" href="#">Simulations</a>
+<a class="text-zinc-400 font-medium hover:text-purple-300 transition-colors duration-300" href="#">Data</a>
+<a class="text-zinc-400 font-medium hover:text-purple-300 transition-colors duration-300" href="#">Theory</a>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden lg:block">
+<input class="bg-surface-container-low border-none rounded-lg px-4 py-2 text-sm w-64 focus:ring-1 focus:ring-primary text-on-surface placeholder:text-zinc-600" placeholder="Search parameters..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-2 text-zinc-500 text-lg">search</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-zinc-400 hover:text-primary transition-colors"><span class="material-symbols-outlined">tune</span></button>
+<button class="text-zinc-400 hover:text-primary transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="text-zinc-400 hover:text-primary transition-colors"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</div>
+</div>
+</nav>
+<div class="flex">
+<!-- SideNavBar (Suppressed for this view to prioritize Canvas per instructions, but placeholder logic exists) -->
+<main class="flex-1 min-h-screen">
+<!-- Header Section -->
+<header class="pt-24 pb-12 px-12 max-w-[1600px] mx-auto">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<div class="data-pulse"></div>
+<span class="font-['Inter'] uppercase tracking-widest text-[10px] text-tertiary font-bold">LIVE SYSTEM UPLINK ACTIVE</span>
+</div>
+<h1 class="font-headline text-6xl font-bold tracking-tighter text-white">Experimental <br/><span class="text-primary drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">Repository</span></h1>
+<p class="max-w-xl text-on-surface-variant text-lg font-light leading-relaxed">
+                            Access the global nexus of quantum simulations and relativistic modeling. High-fidelity computation environments for advanced physical verification.
+                        </p>
+</div>
+<div class="flex flex-wrap gap-4">
+<button class="glass px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-white/10 transition-all">
+<span class="material-symbols-outlined text-secondary">database</span>
+<span class="text-sm font-medium">EXPORT_DATA</span>
+</button>
+<button class="bg-primary hover:bg-primary-dim text-on-primary-fixed px-8 py-3 rounded-lg font-bold transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] flex items-center gap-2">
+<span class="material-symbols-outlined font-bold">add</span>
+                            NEW_EXPERIMENT
+                        </button>
+</div>
+</div>
+</header>
+<!-- Filter Bar -->
+<section class="px-12 mb-12 max-w-[1600px] mx-auto">
+<div class="glass-card p-2 rounded-xl flex flex-col md:flex-row gap-4 items-center">
+<div class="relative w-full md:flex-1">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">search</span>
+<input class="w-full bg-transparent border-none pl-12 pr-4 py-3 font-headline text-sm tracking-widest uppercase focus:ring-0 text-white placeholder:text-zinc-600" placeholder="FILTER BY ID, TAG, OR AUTHOR..." type="text"/>
+</div>
+<div class="flex gap-2 w-full md:w-auto">
+<select class="bg-surface-variant/40 border-none rounded-lg px-6 py-3 text-sm font-headline tracking-widest uppercase text-on-surface-variant focus:ring-1 focus:ring-primary cursor-pointer w-full md:w-48">
+<option>ALL CATEGORIES</option>
+<option>QUANTUM</option>
+<option>DYNAMICS</option>
+<option>FLUIDIC</option>
+</select>
+<select class="bg-surface-variant/40 border-none rounded-lg px-6 py-3 text-sm font-headline tracking-widest uppercase text-on-surface-variant focus:ring-1 focus:ring-primary cursor-pointer w-full md:w-48">
+<option>TEMPLATES</option>
+<option>USER_SUBMITTED</option>
+<option>CORE_SYSTEM</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Main Content: Grid -->
+<section class="px-12 pb-24 max-w-[1600px] mx-auto">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Experiment Card 1 -->
+<div class="group relative bg-surface-container-highest/20 rounded-xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(168,85,247,0.3)] border border-white/5 hover:border-primary/50">
+<div class="aspect-video relative overflow-hidden bg-zinc-950">
+<div class="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-zinc-950 to-pink-900/10"></div>
+<img class="w-full h-full object-cover mix-blend-screen opacity-60" data-alt="abstract 3d render of glowing particle lines swirling in a chaotic web against a deep black background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLyAsJqqJrQ_vA3ku5R9QyGs0Sr6JLTycCQcrMw38XCKdHgPAggFC6_M9N6el_m4Pk_g_dB-vdC8diOuhZGAWf35rh39FVA5xpZV5A3b5JhkmX4YvQiODHRDKdqIRa_UgOZNJhgvC7mGz638Vf3EsSRZE3KE3ZmIks6KwAsGQvDovbK3aqZ_1YKrJIWCrThNTZwKTa_mQz4lMTWLjHmBYW7DMuWbyE7vnPNM80SLNjMVdqikxtyEIdDfjw1UUVWfjovOjAMDLrug"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/40 group-hover:scale-110 transition-transform duration-500" data-weight="fill">cyclone</span>
+</div>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6">
+<button class="w-full py-3 bg-primary text-black font-bold rounded shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-colors">LOAD_EXPERIMENT</button>
+<button class="w-full py-3 border border-white/20 text-white font-medium rounded hover:bg-white/5 transition-colors">SHARE_UPLINK</button>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<div class="flex justify-between items-start">
+<h3 class="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">Double-Pendulum Chaos</h3>
+<span class="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded uppercase font-bold tracking-tighter">Live</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close up headshot portrait of a technician wearing a VR headset in a dimly lit blue room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaDOhvPABUlTvUKDbuFM5d9OPW5-m--YsQj_xvgU--A0GxexVbCX2KJGTS2M_9Aqmg7MMRsION48IowKGsdbJGJnV8E7Ckl-NL8pwCkYQddjXHFffgZE_XoTm6P98eHVo_0uPyK8OQrtNygrF5cii3QvnmJjljwf3-AauKPau8uBOxBDWO6f9R3OqeNzmJ3tPaUfJDpqt43Cc8nuiU9bBSkKi7d3f8LkWseTo0nHbeqM3ZwJcmNz_cHauuZmwrAXlIAl9Pb5DFvw"/>
+</div>
+<span class="text-xs text-on-surface-variant">Authored by <span class="text-white font-medium">CORE_ARCHITECT</span></span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="text-[9px] font-bold text-tertiary bg-tertiary/10 px-2 py-1 rounded border border-tertiary/20 uppercase tracking-widest">Dynamics</span>
+<span class="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-1 rounded border border-secondary/20 uppercase tracking-widest">Complexity_V4</span>
+</div>
+</div>
+</div>
+<!-- Experiment Card 2 -->
+<div class="group relative bg-surface-container-highest/20 rounded-xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(168,85,247,0.3)] border border-white/5 hover:border-primary/50">
+<div class="aspect-video relative overflow-hidden bg-zinc-950">
+<div class="absolute inset-0 bg-gradient-to-tr from-blue-900/20 via-zinc-950 to-primary/10"></div>
+<img class="w-full h-full object-cover mix-blend-screen opacity-50" data-alt="microscopic view of vibrant cells or quantum particles glowing with neon cyan and magenta lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoOVVaRViAaTg9IAuNdHCTI4C8by7ApA43L9IMH3-tDR8r4I5T9ysLqofxEvfVfsIzNChB44ZZspU3s4Jew8fvF56Kimj0OWCik6GiChA77lnx4UsseX7qM69KP2L6S4EDatzQgd6uo4kR5RGH7RlAz6MrOTYnGgc8lRCeMBCXs_2gg_f0Thtxe3QF0XXhKKXcZjNlBNkKR5KIXSJY7lwNSgW1xlAmncFx_zCJx8Fh9UB6VwxTUWLk41rLQWTsifqER8Br1rBBqQ"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/40 group-hover:scale-110 transition-transform duration-500" data-weight="fill">grain</span>
+</div>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6">
+<button class="w-full py-3 bg-primary text-black font-bold rounded shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-colors">LOAD_EXPERIMENT</button>
+<button class="w-full py-3 border border-white/20 text-white font-medium rounded hover:bg-white/5 transition-colors">SHARE_UPLINK</button>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h3 class="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">Particle Entanglement</h3>
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="young male portrait with neon lighting reflecting on his face in a dark futuristic setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChbLBaCz7g4IHWTbGEZIHtIjjE4uYyDvA9QBV4zgTbzQeegwGdoOM33YS0GhlsMSmIsWdYzLWBlObC6GHJ1y69NQhrpUzq58W6D3-p6c1EtQRN__sAnBYkVs4JiEZ4rq59Qs5ye2Fu6eli5PihTNhngaCSFwhhkXSTfre1MgmyWo8HBxMk0lWOehOdpArJ1ENVkttpQLFGpsUMfTTde1NP3JY2N6V0vZsRC3-gG1OaTliSPG2sXzqnPjX7bPWBpz3ypyN620apvA"/>
+</div>
+<span class="text-xs text-on-surface-variant">Authored by <span class="text-white font-medium">NEURAL_LINK</span></span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="text-[9px] font-bold text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20 uppercase tracking-widest">Quantum</span>
+<span class="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-1 rounded border border-secondary/20 uppercase tracking-widest">Entropic_State</span>
+</div>
+</div>
+</div>
+<!-- Experiment Card 3 -->
+<div class="group relative bg-surface-container-highest/20 rounded-xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(168,85,247,0.3)] border border-white/5 hover:border-primary/50">
+<div class="aspect-video relative overflow-hidden bg-zinc-950">
+<div class="absolute inset-0 bg-gradient-to-b from-zinc-900 via-black to-zinc-950"></div>
+<img class="w-full h-full object-cover opacity-40" data-alt="breathtaking space nebula with deep purples and bright pink stars stretching across the cosmic void" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4T-kyKM694eL5R5TVDSgmRulNa4EdsIshdghbHzfzF-nzGNO7yfkLV059Kt6No5CRFbHK9a7wyp5fpUxPwvyV4rxO6Z5wNORn6CfozWYixOZPHZgVDamb4u6Jidr4wOIKDoAdaj1E3CCvtaxyeDm3iQhzIMJqFHUUa2dknPFzNzR0ou7nprQNw3Q0V2KQsAPDFF03fxb8bJm9-4bvoMVjXydztgjtL3tn6BbR0cJE8ecYtsKOL3wfx-HwXF-nzuLKNhp2AwjCeg"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/40 group-hover:scale-110 transition-transform duration-500" data-weight="fill">auto_awesome</span>
+</div>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6">
+<button class="w-full py-3 bg-primary text-black font-bold rounded shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-colors">LOAD_EXPERIMENT</button>
+<button class="w-full py-3 border border-white/20 text-white font-medium rounded hover:bg-white/5 transition-colors">SHARE_UPLINK</button>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h3 class="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">Gravitational Lens Modeling</h3>
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="professional corporate headshot of a person with short hair in front of a dark neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBct0WOp6-F1P5uxJhGpBFXFhX6tm2nQXpQqu6QqJa8foILlwAF7leGR1u2C9ckjNcwjcvLoI_e5aQioMfkCyQiZShOFqAhf3Jy41DlRypT4IbwsR3OYcKMcJRvjnU4Vem1Z9eck0wFuLSjOCp-H5YaxvKu-rrdJNzCp25fKCG_gyMJeX5thLSJETIJlo7hAbQQbTdvApKlCUcaXDi6u5LnfQFr3YhJpTKawFAAFKKu2muABWPST35eVPq1wTTon3tdqCWHOl0YJQ"/>
+</div>
+<span class="text-xs text-on-surface-variant">Authored by <span class="text-white font-medium">COSMO_SYS</span></span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-1 rounded border border-secondary/20 uppercase tracking-widest">Cosmic</span>
+<span class="text-[9px] font-bold text-tertiary bg-tertiary/10 px-2 py-1 rounded border border-tertiary/20 uppercase tracking-widest">Relativity</span>
+</div>
+</div>
+</div>
+<!-- Experiment Card 4 -->
+<div class="group relative bg-surface-container-highest/20 rounded-xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(168,85,247,0.3)] border border-white/5 hover:border-primary/50">
+<div class="aspect-video relative overflow-hidden bg-zinc-950">
+<img class="w-full h-full object-cover mix-blend-luminosity opacity-40" data-alt="digital earth projection with glowing network lines and data points in a high tech command center style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCa9ztE_WDDo2qkLOmJ-wc7rkgdjZPfZdng2khRRJQvXBgwOzjt7J1AjH2BajDmuHJglqJdLnDc5k6rTf6nckoQhR_8A6RY2OZ5Dc4XLlpLDpVk5C9YPYFk0ve58GqtTTRmEVcj6axqPySiuWefkgVtNeYmY2Tjalb8t1RwlIbpiC86o8HNKF-rtpGHl-VJNbQNxCUrIOlGVt58bUbH_aiA13i1O07ke_pAeVXnE_wVp76OKW84xUUKt7tFgETyEwIdOqnsJycJzg"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/40 group-hover:scale-110 transition-transform duration-500" data-weight="fill">waves</span>
+</div>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6">
+<button class="w-full py-3 bg-primary text-black font-bold rounded shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-colors">LOAD_EXPERIMENT</button>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h3 class="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">Fluidic Navier-Stokes</h3>
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="simple minimal portrait of a person looking at camera with neutral expression in low lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2VDEXriZgEs6RRD8vRoL8NkPwlaJ7CxdWgQNoIPCpLvtUri1gYwCA_zcCC76pvKBeI6jrzTqE3KrFN__-Jykf4lKrdGLYTuSysNppNg8JEibWRCub_W13fw6uhdbnVAko723O5YCgHj3KHgqE9-WJWRwwNz4LHHw5VG4RnBSKD93aZAAkNnoLBaDodFhhMMmLIa9zeh6ElikSlNP0z5u1d973N7oSHu6X7M2ashw-Yyh5ZtMwIixG-4JLzgUUx790Tg5vZO4v2Q"/>
+</div>
+<span class="text-xs text-on-surface-variant">Authored by <span class="text-white font-medium">FLOW_MASTER</span></span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="text-[9px] font-bold text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20 uppercase tracking-widest">Fluidic</span>
+<span class="text-[9px] font-bold text-tertiary bg-tertiary/10 px-2 py-1 rounded border border-tertiary/20 uppercase tracking-widest">Simulation</span>
+</div>
+</div>
+</div>
+<!-- Experiment Card 5 -->
+<div class="group relative bg-surface-container-highest/20 rounded-xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(168,85,247,0.3)] border border-white/5 hover:border-primary/50">
+<div class="aspect-video relative overflow-hidden bg-zinc-950">
+<img class="w-full h-full object-cover mix-blend-hard-light opacity-40" data-alt="abstract geometric composition of neon cubes and glowing purple blocks floating in dark space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHVG_FJ3bYRc29oLlR15ij6FWAPrqVf3jKp0bBleu5zmFDxY_ymmil7WrpeZCpiYcpgwT-BaeJJ7z7DSb8SRPP_3yq27xhv49BgtF009PJALLNZAOP2pwuZQPi7PGJgVTddtZzRYe4pKI4lzWUDRHeTBw6XJGNLGkeWhBOlMKQVp1qidqwG19Y7Y46LbKN2G-2t79G6F48Ux8qZ87mbpKFC1RmaaVrNzIPe6SzcOzuOo2n8ta9fgAkVO5nxLR_kBmZOht8B5XQXA"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/40 group-hover:scale-110 transition-transform duration-500" data-weight="fill">blur_on</span>
+</div>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6">
+<button class="w-full py-3 bg-primary text-black font-bold rounded shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-colors">LOAD_EXPERIMENT</button>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h3 class="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">String Theory Lattice</h3>
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close up headshot portrait of a man with dramatic lighting from the side" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNdDMrDm9Yj9eIfPhlkEzOVy9Ai960qrh1THv4KwzZJhxCHkW37kDmebTB36x4BZ-cwSBYxxfC7QsHx-z-4jqdCH_Q1rbxWQIy-7rmS9le1V-3wUCmXE0cOfWjIPvfk9uxN3ZzOdEYlxF22p8cFet4I7_lGoZyk17_lhiqG-ZpPrnS4nh3FNvUDdxWKnocnvXDPPkoiHifnkaPL4GQ8IYjvlLtR_LYgO99UK9eDISFGWnEgLpUkn7FyPadeKTem_LixSCRVlDvrA"/>
+</div>
+<span class="text-xs text-on-surface-variant">Authored by <span class="text-white font-medium">M_THEORY_LAB</span></span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-1 rounded border border-secondary/20 uppercase tracking-widest">Theoretical</span>
+</div>
+</div>
+</div>
+<!-- Experiment Card 6 -->
+<div class="group relative bg-surface-container-highest/20 rounded-xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(168,85,247,0.3)] border border-white/5 hover:border-primary/50">
+<div class="aspect-video relative overflow-hidden bg-zinc-950">
+<img class="w-full h-full object-cover opacity-50" data-alt="high speed camera shot of water droplets colliding creating intricate crown shapes with soft focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-YMCxZi7j-fyOjr4EZ9dzg4vs8ReBqYL4b3-uBIXbAmYrxaSxUxMEgcc2zohqGmI-wboQ0Yx2v3wc6wPdAZo5DWUWhd5zoevSRe7GLzHHTkluGjUgAcHjBPPisyDdSBqP2HibYAnYENHbRCJls2Wi965M16Tg-Bh6OwqeYiU6Oib5qHDyp5XdZ_PWBWmckOvAP35mreL1UHJBxf45kD8HVKWQ_sxTIqIjFRHHaHW7uGVE0evWTvBmgb8zZ7czUrtH3zcFQ7QIqA"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/40 group-hover:scale-110 transition-transform duration-500" data-weight="fill">bubble_chart</span>
+</div>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6">
+<button class="w-full py-3 bg-primary text-black font-bold rounded shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-colors">LOAD_EXPERIMENT</button>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h3 class="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">Dynamic Surface Tension</h3>
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="portrait of a woman in shadow with a single light source highlighting her features in a dark room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKZIGM1_x3J4WJClw_GnIZBaj_Q3-TUeyi1ozF4vf_r9-aYVPI60Wocr09XhPIqgOaYyNs9eQNYz9b6_dkQwH6LAgizVXz_ZvfIoo2hiIUdj50nLOT41jf_B7sP8J5EaTIKEnDdKATnzaSIlHv6XQSIXO9n6oiDIdYUBZUhSEv5jb91VDIm_Zj7wKISpUPvYCzoFC1Dv3TyMVxjKTA3fvHbd-REkPCRchR_vsJrrCSRwQAkxX5WM82W51047PwTVAwm8f_X8kHCA"/>
+</div>
+<span class="text-xs text-on-surface-variant">Authored by <span class="text-white font-medium">HYDRO_GEN</span></span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="text-[9px] font-bold text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20 uppercase tracking-widest">Fluidic</span>
+<span class="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-1 rounded border border-secondary/20 uppercase tracking-widest">Physics_B</span>
+</div>
+</div>
+</div>
+<!-- Experiment Card 7 -->
+<div class="group relative bg-surface-container-highest/20 rounded-xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(168,85,247,0.3)] border border-white/5 hover:border-primary/50">
+<div class="aspect-video relative overflow-hidden bg-zinc-950">
+<img class="w-full h-full object-cover mix-blend-screen opacity-40" data-alt="abstract scientific laboratory equipment glowing with blue and violet neon light in a dark room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVLrWDbBYZzD0S8G2YITZc6VWPDkQDh5PdOM2Es2JEpIehhQqt2UPayFayjN4PhA0ADnz9NZcsTfHWviH5IbcURHgAgg_eE2pMK8ZIc-1ItAVicArr_EamSmo4LQGlAtKoRrpNi_yr9DOZsl4-t5BXkwZ3ess8oF23coSoNImH-ubTIRPYyp3XIK9qOdO0pzR3xarTWUIQ6rvc7zNhrq5fhv3C8xhsmTZbcWwauXpu5rJFE0Um8a2tclF8H7TfKXC5csPfAQ-kSQ"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/40 group-hover:scale-110 transition-transform duration-500" data-weight="fill">experiment</span>
+</div>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6">
+<button class="w-full py-3 bg-primary text-black font-bold rounded shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-colors">LOAD_EXPERIMENT</button>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h3 class="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">Atomic Collision Matrix</h3>
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="modern professional business portrait of a man with subtle warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLS2ewzT8xweTWTr-Be11zU77uPZV3oVFE-01IrWs6F4yF0K-USturTEwG2Z1EG4RWIf8CY79PBNFft6ZUpcVXqfKmGlctYwXihEvWh0hga1PQjmvjslfFR3E4rDWgKstMF1VSb-Rl1NY-FvQj1OoDp69qxqALJ5sfgpFiXDjP_GY2Q3pCHI_UTDGybIgRuePTQ8c1IZsSTtOGpJTvm_RBbHRmaXJk4dov5oYybOR7-jpsv0NoonQRFmsqdLoJhmpHQ3Mlb0qa2w"/>
+</div>
+<span class="text-xs text-on-surface-variant">Authored by <span class="text-white font-medium">PARTICLE_PRO</span></span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="text-[9px] font-bold text-tertiary bg-tertiary/10 px-2 py-1 rounded border border-tertiary/20 uppercase tracking-widest">Atomic</span>
+<span class="text-[9px] font-bold text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20 uppercase tracking-widest">Collider</span>
+</div>
+</div>
+</div>
+<!-- Experiment Card 8 -->
+<div class="group relative bg-surface-container-highest/20 rounded-xl overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(168,85,247,0.3)] border border-white/5 hover:border-primary/50">
+<div class="aspect-video relative overflow-hidden bg-zinc-950">
+<img class="w-full h-full object-cover mix-blend-color-dodge opacity-60" data-alt="ethereal wispy light trails in neon cyan and blue curving through absolute darkness" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTPidsOl66AzynB3h5l1S8qFwy7fIindtW4gbOVr3ulBdQc0ljqgol3vn4tcNDftTcCNfvPE4Sn1DxMkJ4TVIKToXQvWqHDA5Cjp8uvAnMeIyc6F-NFfOq0fHFyW_Mv0wfh8m7xjoGtzfrtHCcZGi5Vs00X8InIkILiRCdZ5kZXwnbjCoU6lsDN4Id_-AnzyGw8B2VUQkMM1NM41Lfxwa0DuftJf_nc7b0Fc41ovG0MJsTBqNNspo8k_Wnhon-42-QdmdpI1EuQQ"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/40 group-hover:scale-110 transition-transform duration-500" data-weight="fill">temp_preferences_custom</span>
+</div>
+<div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6">
+<button class="w-full py-3 bg-primary text-black font-bold rounded shadow-lg shadow-primary/20 hover:bg-primary-fixed transition-colors">LOAD_EXPERIMENT</button>
+</div>
+</div>
+<div class="p-6 space-y-4">
+<h3 class="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">Entropy Dissipation Flux</h3>
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full bg-zinc-800 border border-white/10 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close up face of a stylized character in high contrast lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8Gz9YE64fYav1MdQLUA5I_FfpWp-fMoVPg-uoS56QYO1CCfdcpU-BlsbRtQSF_QCY-oILUtMrvStkI_Ys5e6CSKyUItIkettZ3cepuvoeTnWKB9mXFNVZJq1YfDaftlfqoKlOaiH4j7hgT1ELJR5slwOfKRHZ5VGGgydXrTzHt7K6M80_2DFMlnTk9QvieVe8jcjjrucX9xLDeFi7xgj2qyj5mjw6d13iPZtYBdwTidlBrKjEl9h6bZht3qlTcpCqVGA8CDTfJA"/>
+</div>
+<span class="text-xs text-on-surface-variant">Authored by <span class="text-white font-medium">VOID_WALKER</span></span>
+</div>
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="text-[9px] font-bold text-secondary bg-secondary/10 px-2 py-1 rounded border border-secondary/20 uppercase tracking-widest">Theoretical</span>
+<span class="text-[9px] font-bold text-tertiary bg-tertiary/10 px-2 py-1 rounded border border-tertiary/20 uppercase tracking-widest">Flux_Core</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-black docked full-width bottom-0 flex justify-between items-center px-12 py-6 w-full border-t border-white/5 font-['Inter'] text-[10px] tracking-widest uppercase">
+<div class="text-zinc-600">
+            © 2024 KINETIC_VOID_PHYSICS. ALL_SYSTEMS_GO.
+        </div>
+<div class="flex gap-8">
+<a class="text-zinc-600 hover:text-pink-500 transition-colors" href="#">Neural_Link</a>
+<a class="text-zinc-600 hover:text-pink-500 transition-colors" href="#">Privacy_Protocol</a>
+<a class="text-zinc-600 hover:text-pink-500 transition-colors" href="#">API_Endpoint</a>
+</div>
+<div class="flex items-center gap-2 text-primary/50">
+<span class="material-symbols-outlined text-[12px]">security</span>
+            SECURE_CONNECTION_ESTABLISHED
+        </div>
+</footer>
+</body></html>
