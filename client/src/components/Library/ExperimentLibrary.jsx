@@ -1,4 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+
+const TEMPLATE_STATE = { bodies: [
+  { x: 400, y: 300, isStatic: false, customParams: { shape: 'circle', radius: 40, color: '#a855f7', restitution: 0.9, friction: 0.1 } },
+  { x: 450, y: 150, isStatic: false, customParams: { shape: 'rectangle', width: 60, height: 60, color: '#f43f5e', restitution: 0.4, friction: 0.1 } }
+] };
 
 const DUMMY_EXPERIMENTS = [
   {
@@ -64,13 +69,52 @@ const DUMMY_EXPERIMENTS = [
     tags: ['Fluidic', 'Physics_B'],
     icon: 'bubble_chart',
     image: 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=1470&auto=format&fit=crop',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
-    color: 'indigo'
+    color: 'indigo',
+    stateData: TEMPLATE_STATE
   }
 ]
 
-const ExperimentLibrary = ({ onClose }) => {
+const ExperimentLibrary = ({ onClose, onExport, onSave, onLoad }) => {
   const [searchTerm, setSearchTerm] = useState('')
+  const [experiments, setExperiments] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/experiments')
+      .then(res => res.json())
+      .then(data => {
+        const dbExps = data.experiments.map(e => ({
+          id: e._id, title: e.title, author: e.author, status: 'Live',
+          tags: ['DATABASE'], icon: 'cloud', image: e.thumbnail,
+          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
+          color: 'blue', stateData: e.stateData, isDB: true
+        }))
+        setExperiments([...DUMMY_EXPERIMENTS, ...dbExps])
+      })
+      .catch(err => {
+        console.warn('DB Fetch failed:', err)
+        setExperiments(DUMMY_EXPERIMENTS)
+      })
+      .finally(() => setIsLoading(false))
+  }, [])
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result)
+        onLoad(data)
+      } catch (err) {
+        console.error('Failed to parse:', err)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const filtered = experiments.filter(ex => ex.title.toLowerCase().includes(searchTerm.toLowerCase()) || ex.author.toLowerCase().includes(searchTerm.toLowerCase()))
 
   return (
     <div className="fixed inset-0 z-[10000] bg-[#050505]/95 backdrop-blur-2xl overflow-y-auto text-white selection:bg-purple-500/30 font-space-grotesk animate-in fade-in duration-300">
@@ -114,13 +158,18 @@ const ExperimentLibrary = ({ onClose }) => {
             </p>
           </div>
           <div className="flex flex-wrap gap-4">
-            <button className="bg-black/40 border border-white/10 px-6 py-3 rounded-sm flex items-center gap-2 hover:bg-white/5 transition-all text-xs font-bold tracking-widest uppercase">
+            <input type="file" accept=".json" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+            <button onClick={() => fileInputRef.current?.click()} className="bg-black/40 border border-white/10 px-6 py-3 rounded-sm flex items-center gap-2 hover:bg-white/5 transition-all text-xs font-bold tracking-widest uppercase">
+              <span className="material-symbols-outlined text-sm text-zinc-400">upload</span>
+              <span>Import</span>
+            </button>
+            <button onClick={onExport} className="bg-black/40 border border-white/10 px-6 py-3 rounded-sm flex items-center gap-2 hover:bg-white/5 transition-all text-xs font-bold tracking-widest uppercase">
               <span className="material-symbols-outlined text-sm text-zinc-400">download</span>
               <span>Export</span>
             </button>
-            <button onClick={onClose} className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-sm font-black text-xs tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm">add</span>
-              NEW EXPERIMENT
+            <button onClick={() => { onSave('My Custom Workspace'); setTimeout(() => onClose(), 500); }} className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-sm font-black text-xs tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">save</span>
+              SAVE TO DB
             </button>
           </div>
         </div>
@@ -152,8 +201,13 @@ const ExperimentLibrary = ({ onClose }) => {
 
       {/* Main Content: Grid */}
       <section className="px-8 md:px-12 pb-24 max-w-[1600px] mx-auto">
+        {isLoading ? (
+          <div className="w-full flex justify-center py-20">
+            <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 tracking-tight">
-          {DUMMY_EXPERIMENTS.map((exp) => (
+          {filtered.map((exp) => (
             <div key={exp.id} className="group relative bg-[#0a0a0a] rounded-lg overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_15px_30px_-10px_rgba(168,85,247,0.2)] border border-white/5 hover:border-purple-500/50 flex flex-col">
               
               <div className="aspect-video relative overflow-hidden bg-black shrink-0">
@@ -173,8 +227,8 @@ const ExperimentLibrary = ({ onClose }) => {
 
                 {/* Hover overlay actions */}
                 <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6 z-20">
-                  <button onClick={onClose} className="w-full py-3 bg-purple-600 text-white text-xs font-black tracking-widest uppercase rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500 active:scale-95 transition-all">LOAD CORE</button>
-                  <button className="w-full py-3 bg-white/5 border border-white/10 text-white text-xs font-bold tracking-widest uppercase rounded-sm hover:bg-white/10 hover:border-purple-500/30 active:scale-95 transition-all">SHARE LINK</button>
+                  <button onClick={() => exp.stateData && onLoad(exp.stateData)} className="w-full py-3 bg-purple-600 text-white text-xs font-black tracking-widest uppercase rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500 active:scale-95 transition-all">LOAD STATE</button>
+                  <button onClick={() => exp.isDB && onExport(exp.stateData)} className="w-full py-3 bg-white/5 border border-white/10 text-white text-xs font-bold tracking-widest uppercase rounded-sm hover:bg-white/10 hover:border-purple-500/30 active:scale-95 transition-all">EXPORT AS JSON</button>
                 </div>
               </div>
 
@@ -203,6 +257,7 @@ const ExperimentLibrary = ({ onClose }) => {
             </div>
           ))}
         </div>
+        )}
       </section>
       
     </div>

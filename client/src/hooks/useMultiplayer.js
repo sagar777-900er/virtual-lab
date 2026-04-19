@@ -10,6 +10,7 @@ export default function useMultiplayer() {
   const [isHost, setIsHost] = useState(false)
   const [participants, setParticipants] = useState([])
   const [username, setUsername] = useState('')
+  const [cursors, setCursors] = useState({})
   
   // Event callback refs (set by the consuming component)
   const onBodyAddedRef = useRef(null)
@@ -35,6 +36,7 @@ export default function useMultiplayer() {
       setIsConnected(false)
       setRoomCode(null)
       setParticipants([])
+      setCursors({})
       console.log('[Multiplayer] Disconnected')
     })
 
@@ -52,6 +54,11 @@ export default function useMultiplayer() {
 
     socket.on('user-left', (data) => {
       setParticipants(prev => prev.filter(p => p.id !== data.socketId))
+      setCursors(prev => {
+        const next = { ...prev }
+        delete next[data.socketId]
+        return next
+      })
       console.log('[Multiplayer] User left:', data.socketId)
     })
 
@@ -73,6 +80,7 @@ export default function useMultiplayer() {
     })
 
     socket.on('cursor-update', (data) => {
+      setCursors(prev => ({ ...prev, [data.socketId]: data.position }))
       if (onCursorUpdateRef.current) {
         onCursorUpdateRef.current(data)
       }
@@ -143,6 +151,7 @@ export default function useMultiplayer() {
     setRoomCode(null)
     setIsHost(false)
     setParticipants([])
+    setCursors({})
   }, [])
 
   // Broadcast body creation
@@ -195,6 +204,7 @@ export default function useMultiplayer() {
     roomCode,
     isHost,
     participants,
+    cursors,
     username,
     createRoom,
     joinRoom,

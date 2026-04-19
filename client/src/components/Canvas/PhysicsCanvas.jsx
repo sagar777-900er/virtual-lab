@@ -94,6 +94,68 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       })
       setActionHistory([])
       setRedoStack([])
+    },
+    getSnapshot: () => {
+      const engine = engineRef.current
+      if (!engine) return null
+      
+      const bodies = Composite.allBodies(engine.world)
+        .filter(b => (!b.isStatic || b.label === 'Platform' || b.label === 'Wall'))
+        .map(b => ({
+          x: b.position.x, y: b.position.y, angle: b.angle,
+          isStatic: b.isStatic, label: b.label,
+          customParams: b.customParams || null,
+          color: b.render?.fillStyle
+        }))
+        
+      return { bodies }
+    },
+    loadSnapshot: (snapshot) => {
+      const engine = engineRef.current
+      if (!engine || !snapshot || !snapshot.bodies) return
+      
+      // Clear all existing
+      Composite.allBodies(engine.world).forEach(b => {
+        if (!b.isStatic) {
+          if (b._motorHandler) Events.off(engine, 'beforeUpdate', b._motorHandler)
+          Composite.remove(engine.world, b)
+        }
+      })
+      
+      snapshot.bodies.forEach(bData => {
+        if (bData.isStatic && (bData.label === 'Platform' || bData.label === 'Wall')) {
+          // Recreate platform/wall
+          let w = bData.label === 'Platform' ? 200 : 20;
+          let h = bData.label === 'Platform' ? 20 : 150;
+          const body = Bodies.rectangle(bData.x, bData.y, w, h, {
+            isStatic: true, render: { fillStyle: '#334155', strokeStyle: '#475569', lineWidth: 2 },
+            label: bData.label
+          });
+          Body.setAngle(body, bData.angle || 0);
+          Composite.add(engine.world, body);
+          return;
+        }
+
+        if (bData.customParams) {
+          let body = null;
+          const { shape, radius, width, height, sides, color, restitution, friction } = bData.customParams;
+          if (shape === 'circle') {
+            body = Bodies.circle(bData.x, bData.y, radius, { render: { fillStyle: color, lineWidth: 1 }, restitution, friction });
+          } else if (shape === 'rectangle') {
+            body = Bodies.rectangle(bData.x, bData.y, width, height, { render: { fillStyle: color, lineWidth: 1 }, restitution, friction });
+          } else if (shape === 'polygon') {
+            body = Bodies.polygon(bData.x, bData.y, sides, radius, { render: { fillStyle: color, lineWidth: 1 }, restitution, friction });
+          }
+          if (body) {
+            Body.setAngle(body, bData.angle || 0);
+            body.customParams = bData.customParams;
+            Composite.add(engine.world, body);
+          }
+        }
+      })
+      
+      setActionHistory([])
+      setRedoStack([])
     }
   }))
 
@@ -278,13 +340,24 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
         const engine = engineRef.current
         if (!engine || !data?.bodies) return
         const localBodies = Composite.allBodies(engine.world)
+        
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const factor = 0.5; // Smooth interpolation instead of hard snapping
+
         data.bodies.forEach(remote => {
           const local = localBodies.find(b => b.id === remote.id || b._remoteId === remote.id)
-          if (local && !local.isStatic) {
-            Body.setPosition(local, { x: remote.x, y: remote.y })
-            Body.setVelocity(local, { x: remote.vx, y: remote.vy })
-            Body.setAngle(local, remote.angle)
-            Body.setAngularVelocity(local, remote.aVel)
+          if (local && !local.isStatic && !local.isSleeping) {
+            // Apply smoothing lag compensation
+            Body.setPosition(local, { 
+              x: lerp(local.position.x, remote.x, factor), 
+              y: lerp(local.position.y, remote.y, factor) 
+            })
+            Body.setVelocity(local, { 
+              x: lerp(local.velocity.x, remote.vx, factor), 
+              y: lerp(local.velocity.y, remote.vy, factor) 
+            })
+            Body.setAngle(local, lerp(local.angle, remote.angle, factor))
+            Body.setAngularVelocity(local, lerp(local.angularVelocity, remote.aVel, factor))
           }
         })
       },
@@ -349,8 +422,9 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
     let body = null
 
     switch (selectedTool) {
-      case 'circle':
-        body = Bodies.circle(x, y, 25 + Math.random() * 15, {
+      case 'circle': {
+        const radius = 25 + Math.random() * 15;
+        body = Bodies.circle(x, y, radius, {
           render: {
             fillStyle: color,
             strokeStyle: 'rgba(255,255,255,0.1)',
@@ -359,10 +433,14 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
           restitution: 0.5,
           friction: 0.1,
         })
+        body.customParams = { shape: 'circle', radius, color, restitution: 0.5, friction: 0.1 }
         break
+      }
 
-      case 'rectangle':
-        body = Bodies.rectangle(x, y, 50 + Math.random() * 30, 40 + Math.random() * 20, {
+      case 'rectangle': {
+        const width = 50 + Math.random() * 30;
+        const height = 40 + Math.random() * 20;
+        body = Bodies.rectangle(x, y, width, height, {
           render: {
             fillStyle: color,
             strokeStyle: 'rgba(255,255,255,0.1)',
@@ -371,10 +449,13 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
           restitution: 0.3,
           friction: 0.1,
         })
+        body.customParams = { shape: 'rectangle', width, height, color, restitution: 0.3, friction: 0.1 }
         break
+      }
 
-      case 'triangle':
-        body = Bodies.polygon(x, y, 3, 30 + Math.random() * 10, {
+      case 'triangle': {
+        const radius = 30 + Math.random() * 10;
+        body = Bodies.polygon(x, y, 3, radius, {
           render: {
             fillStyle: color,
             strokeStyle: 'rgba(255,255,255,0.1)',
@@ -383,7 +464,9 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
           restitution: 0.4,
           friction: 0.1,
         })
+        body.customParams = { shape: 'polygon', sides: 3, radius, color, restitution: 0.4, friction: 0.1 }
         break
+      }
 
       case 'ground':
         body = Bodies.rectangle(x, y, 200, 20, {
