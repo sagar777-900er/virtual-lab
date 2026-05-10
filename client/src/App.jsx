@@ -82,6 +82,7 @@ function App() {
   const handleLoadExperiment = useCallback((stateData) => {
     canvasRef.current?.loadSnapshot(stateData)
     setShowLibrary(false)
+    setIsPlaying(false) // Pause simulation automatically
     toast.success('Experiment parameters loaded into workspace', {
       style: { background: '#0a0a0a', color: '#fff', border: '1px solid rgba(168,85,247,0.3)' },
       icon: '⚡'
@@ -89,7 +90,7 @@ function App() {
   }, [])
 
   return (
-    <div className="bg-background text-on-background h-screen w-screen overflow-hidden font-inter">
+    <div className="bg-background text-on-background h-screen w-screen overflow-hidden font-space-grotesk">
       {/* THE KINETIC VOID Background */}
       <div className="kinetic-void-bg"></div>
       
@@ -179,6 +180,7 @@ function App() {
         <PropertiesPanel
           selectedBody={selectedBody}
           engine={engine}
+          onUpdateBody={(id, updates) => canvasRef.current?.updateBody(id, updates)}
         />
       </div>
     </div>

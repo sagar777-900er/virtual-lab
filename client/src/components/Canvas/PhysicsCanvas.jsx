@@ -52,6 +52,16 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       
       if (target) {
         if (target._motorHandler) Events.off(engine, 'beforeUpdate', target._motorHandler)
+        if (lastAction.type === 'constraint' && target.bodyA && target.bodyA._motorHandler) {
+          Events.off(engine, 'beforeUpdate', target.bodyA._motorHandler)
+          delete target.bodyA._motorHandler
+          target.bodyA.label = target.bodyA.label.replace(' [Motor]', '')
+        } else if (lastAction.type === 'constraint' && target.bodyB && target.bodyB._motorHandler) {
+          Events.off(engine, 'beforeUpdate', target.bodyB._motorHandler)
+          delete target.bodyB._motorHandler
+          target.bodyB.label = target.bodyB.label.replace(' [Motor]', '')
+        }
+        
         Composite.remove(engine.world, target)
         setRedoStack(prev => [...prev, { ...lastAction, removedObj: target }])
         if (lastAction.type === 'body' && multiplayer?.sendBodyRemoved) multiplayer.sendBodyRemoved(target.id)
@@ -102,29 +112,63 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       const bodies = Composite.allBodies(engine.world)
         .filter(b => (!b.isStatic || b.label === 'Platform' || b.label === 'Wall'))
         .map(b => ({
+          id: b.id, // Keep ID for constraint matching
           x: b.position.x, y: b.position.y, angle: b.angle,
+          velocity: { x: b.velocity.x, y: b.velocity.y },
+          angularVelocity: b.angularVelocity,
           isStatic: b.isStatic, label: b.label,
           customParams: b.customParams || null,
-          color: b.render?.fillStyle
+          color: b.render?.fillStyle,
+          mass: b.mass,
+          density: b.density,
+          friction: b.friction,
+          restitution: b.restitution,
+          frictionAir: b.frictionAir,
+          _hasMotor: !!b._motorHandler // Flag for motor re-creation
         }))
         
-      return { bodies }
+      const constraints = Composite.allConstraints(engine.world)
+        .filter(c => c.label !== 'Mouse Constraint')
+        .map(c => ({
+          bodyA_id: c.bodyA ? c.bodyA.id : null,
+          bodyB_id: c.bodyB ? c.bodyB.id : null,
+          pointA: c.pointA ? { x: c.pointA.x, y: c.pointA.y } : null,
+          pointB: c.pointB ? { x: c.pointB.x, y: c.pointB.y } : null,
+          length: c.length,
+          stiffness: c.stiffness,
+          damping: c.damping,
+          render: c.render
+        }))
+        
+      return { bodies, constraints }
     },
     loadSnapshot: (snapshot) => {
       const engine = engineRef.current
       if (!engine || !snapshot || !snapshot.bodies) return
       
-      // Clear all existing
+      // Clear all existing non-static bodies & constraints
       Composite.allBodies(engine.world).forEach(b => {
         if (!b.isStatic) {
           if (b._motorHandler) Events.off(engine, 'beforeUpdate', b._motorHandler)
           Composite.remove(engine.world, b)
         }
       })
+      Composite.allConstraints(engine.world).forEach(c => {
+        if (c.label !== 'Mouse Constraint') Composite.remove(engine.world, c)
+      })
       
+      // Map old IDs to new Bodies
+      const idMap = new Map();
+
       snapshot.bodies.forEach(bData => {
         if (bData.isStatic && (bData.label === 'Platform' || bData.label === 'Wall')) {
-          // Recreate platform/wall
+          // Check if it already exists by looking for close coordinates and label
+          const existing = Composite.allBodies(engine.world).find(b => b.label === bData.label && Math.abs(b.position.x - bData.x) < 5 && Math.abs(b.position.y - bData.y) < 5);
+          if (existing) {
+             idMap.set(bData.id, existing);
+             return;
+          }
+          
           let w = bData.label === 'Platform' ? 200 : 20;
           let h = bData.label === 'Platform' ? 20 : 150;
           const body = Bodies.rectangle(bData.x, bData.y, w, h, {
@@ -133,29 +177,162 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
           });
           Body.setAngle(body, bData.angle || 0);
           Composite.add(engine.world, body);
+          idMap.set(bData.id, body);
           return;
         }
 
         if (bData.customParams) {
           let body = null;
-          const { shape, radius, width, height, sides, color, restitution, friction } = bData.customParams;
+          const { shape, radius, width, height, sides, color, restitution, friction, opacity, hasGlow } = bData.customParams;
+          const renderOpts = { fillStyle: color, lineWidth: hasGlow ? 3 : 1, strokeStyle: hasGlow ? color : 'rgba(255,255,255,0.1)', opacity: opacity ?? 1 };
+
           if (shape === 'circle') {
-            body = Bodies.circle(bData.x, bData.y, radius, { render: { fillStyle: color, lineWidth: 1 }, restitution, friction });
+            body = Bodies.circle(bData.x, bData.y, radius, { render: renderOpts, restitution: bData.restitution ?? restitution, friction: bData.friction ?? friction });
           } else if (shape === 'rectangle') {
-            body = Bodies.rectangle(bData.x, bData.y, width, height, { render: { fillStyle: color, lineWidth: 1 }, restitution, friction });
+            body = Bodies.rectangle(bData.x, bData.y, width, height, { render: renderOpts, restitution: bData.restitution ?? restitution, friction: bData.friction ?? friction });
           } else if (shape === 'polygon') {
-            body = Bodies.polygon(bData.x, bData.y, sides, radius, { render: { fillStyle: color, lineWidth: 1 }, restitution, friction });
+            body = Bodies.polygon(bData.x, bData.y, sides, radius, { render: renderOpts, restitution: bData.restitution ?? restitution, friction: bData.friction ?? friction });
           }
+          
           if (body) {
             Body.setAngle(body, bData.angle || 0);
+            if (bData.velocity) Body.setVelocity(body, bData.velocity);
+            if (bData.angularVelocity) Body.setAngularVelocity(body, bData.angularVelocity);
+            if (bData.mass) Body.setMass(body, bData.mass);
+            if (bData.density) Body.setDensity(body, bData.density);
+            if (bData.frictionAir) body.frictionAir = bData.frictionAir;
+            if (bData.isStatic) Body.setStatic(body, true);
+            body.label = bData.label || body.label;
+            
             body.customParams = bData.customParams;
             Composite.add(engine.world, body);
+            idMap.set(bData.id, body);
+            
+            if (bData._hasMotor) {
+              const motorSpeed = 0.05;
+              const motorHandler = () => Body.setAngularVelocity(body, motorSpeed);
+              Events.on(engine, 'beforeUpdate', motorHandler);
+              body._motorHandler = motorHandler;
+            }
           }
         }
-      })
+      });
+      
+      // Recreate constraints
+      if (snapshot.constraints) {
+        snapshot.constraints.forEach(cData => {
+           let options = {
+             length: cData.length,
+             stiffness: cData.stiffness,
+             damping: cData.damping,
+             render: cData.render
+           };
+           if (cData.bodyA_id && idMap.has(cData.bodyA_id)) options.bodyA = idMap.get(cData.bodyA_id);
+           if (cData.bodyB_id && idMap.has(cData.bodyB_id)) options.bodyB = idMap.get(cData.bodyB_id);
+           if (cData.pointA) options.pointA = cData.pointA;
+           if (cData.pointB) options.pointB = cData.pointB;
+           
+           if (options.bodyA || options.bodyB) {
+              Composite.add(engine.world, Constraint.create(options));
+           }
+        });
+      }
+      
       
       setActionHistory([])
       setRedoStack([])
+    },
+    updateBody: (id, updates) => {
+      const engine = engineRef.current;
+      if (!engine) return;
+      const bodies = Composite.allBodies(engine.world);
+      const target = bodies.find(b => b.id === id);
+      if (!target) return;
+
+      const needsRecreation = ['width', 'height', 'radius', 'sides'].some(key => key in updates);
+      
+      if (needsRecreation && target.customParams) {
+        // Recreate body to correctly resize
+        const { x, y } = target.position;
+        const angle = target.angle;
+        const velocity = { x: target.velocity.x, y: target.velocity.y };
+        const angularVelocity = target.angularVelocity;
+        const customParams = { ...target.customParams, ...updates };
+
+        let newBody = null;
+        const { shape, radius, width, height, sides, color, restitution, friction, opacity, hasGlow } = customParams;
+        const renderOpts = { fillStyle: color, lineWidth: hasGlow ? 3 : 1, strokeStyle: hasGlow ? color : 'rgba(255,255,255,0.1)', opacity: opacity ?? target.render.opacity };
+
+        if (shape === 'circle') {
+          newBody = Bodies.circle(x, y, radius, { render: renderOpts, restitution, friction });
+        } else if (shape === 'rectangle') {
+          newBody = Bodies.rectangle(x, y, width, height, { render: renderOpts, restitution, friction });
+        } else if (shape === 'polygon') {
+          newBody = Bodies.polygon(x, y, sides, radius, { render: renderOpts, restitution, friction });
+        }
+
+        if (newBody) {
+          newBody.customParams = customParams;
+          Body.setAngle(newBody, angle);
+          Body.setVelocity(newBody, velocity);
+          Body.setAngularVelocity(newBody, angularVelocity);
+          Body.setMass(newBody, target.mass);
+          Body.setDensity(newBody, target.density);
+          newBody.frictionAir = target.frictionAir;
+          Body.setStatic(newBody, target.isStatic);
+          
+          if (target._remoteId) newBody._remoteId = target._remoteId;
+          
+          if (target._motorHandler) {
+             newBody._motorHandler = target._motorHandler;
+             newBody.label = target.label;
+          }
+
+          // Move constraints to new body
+          const constraints = Composite.allConstraints(engine.world);
+          constraints.forEach(c => {
+            if (c.bodyA === target) c.bodyA = newBody;
+            if (c.bodyB === target) c.bodyB = newBody;
+          });
+
+          Composite.remove(engine.world, target);
+          Composite.add(engine.world, newBody);
+          onBodySelect(newBody); // update selection
+
+          if (multiplayer?.sendBodyRemoved) multiplayer.sendBodyRemoved(target.id);
+          if (multiplayer?.sendBodyCreated) multiplayer.sendBodyCreated({ ...customParams, remoteId: newBody.id, x, y });
+        }
+      } else {
+        // Direct mutation
+        if ('mass' in updates) Body.setMass(target, updates.mass);
+        if ('density' in updates) Body.setDensity(target, updates.density);
+        if ('friction' in updates) target.friction = updates.friction;
+        if ('restitution' in updates) target.restitution = updates.restitution;
+        if ('frictionAir' in updates) target.frictionAir = updates.frictionAir;
+        if ('isStatic' in updates) Body.setStatic(target, updates.isStatic);
+        if ('angle' in updates) Body.setAngle(target, updates.angle);
+        if ('angularVelocity' in updates) Body.setAngularVelocity(target, updates.angularVelocity);
+        if ('velocityX' in updates || 'velocityY' in updates) {
+          Body.setVelocity(target, { 
+            x: updates.velocityX ?? target.velocity.x, 
+            y: updates.velocityY ?? target.velocity.y 
+          });
+        }
+        
+        // Visuals
+        if (target.customParams) {
+          if ('color' in updates) {
+            target.render.fillStyle = updates.color;
+            if (target.customParams.hasGlow) target.render.strokeStyle = updates.color;
+          }
+          if ('opacity' in updates) target.render.opacity = updates.opacity;
+          if ('hasGlow' in updates) {
+            target.render.lineWidth = updates.hasGlow ? 3 : 1;
+            target.render.strokeStyle = updates.hasGlow ? target.render.fillStyle : 'rgba(255,255,255,0.1)';
+          }
+          target.customParams = { ...target.customParams, ...updates };
+        }
+      }
     }
   }))
 
@@ -242,6 +419,23 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
     // Start renderer
     Render.run(render)
 
+    // Render Gizmos for selection (Optional, can be removed since we use strokeStyle)
+    Events.on(render, 'afterRender', () => {
+      const context = render.context;
+      const engine = engineRef.current;
+      if (!engine || !engine.world) return;
+      
+      const bodies = Composite.allBodies(engine.world);
+      bodies.forEach(b => {
+        if (b._wasSelected) {
+           context.beginPath();
+           context.arc(b.position.x, b.position.y, 4, 0, 2 * Math.PI);
+           context.fillStyle = '#fff';
+           context.fill();
+        }
+      });
+    });
+
     // Body selection on click
     Events.on(mouseConstraint, 'mousedown', (event) => {
       const bodies = Composite.allBodies(engine.world)
@@ -251,8 +445,27 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       if (clickedBodies.length > 0) {
         const body = clickedBodies[0]
         if (!body.isStatic || body.label !== 'Ground') {
+          bodies.forEach(b => {
+             if (b._wasSelected) {
+                b.render.lineWidth = b.customParams?.hasGlow ? 3 : 1;
+                b.render.strokeStyle = b.customParams?.hasGlow ? b.render.fillStyle : 'rgba(255,255,255,0.1)';
+                b._wasSelected = false;
+             }
+          });
+          body._wasSelected = true;
+          body.render.lineWidth = 4;
+          body.render.strokeStyle = '#a855f7'; // Purple glow
           onBodySelect(body)
         }
+      } else {
+          bodies.forEach(b => {
+             if (b._wasSelected) {
+                b.render.lineWidth = b.customParams?.hasGlow ? 3 : 1;
+                b.render.strokeStyle = b.customParams?.hasGlow ? b.render.fillStyle : 'rgba(255,255,255,0.1)';
+                b._wasSelected = false;
+             }
+          });
+          onBodySelect(null);
       }
     })
 

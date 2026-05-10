@@ -1,9 +1,39 @@
 import { useState, useEffect, useRef } from 'react'
 
-const TEMPLATE_STATE = { bodies: [
-  { x: 400, y: 300, isStatic: false, customParams: { shape: 'circle', radius: 40, color: '#a855f7', restitution: 0.9, friction: 0.1 } },
-  { x: 450, y: 150, isStatic: false, customParams: { shape: 'rectangle', width: 60, height: 60, color: '#f43f5e', restitution: 0.4, friction: 0.1 } }
-] };
+const TEMPLATE_PENDULUM = {
+  bodies: [
+    { id: 1, x: 400, y: 100, isStatic: true, label: "Platform", customParams: null },
+    { id: 2, x: 600, y: 100, isStatic: false, angle: 0, customParams: { shape: 'circle', radius: 30, color: '#ec4899', restitution: 0.8, friction: 0.1, mass: 5, density: 0.05, frictionAir: 0 } }
+  ],
+  constraints: [
+    { bodyA_id: 1, bodyB_id: 2, pointA: { x: 0, y: 0 }, length: 200, stiffness: 1, render: { strokeStyle: 'rgba(99, 102, 241, 0.6)', lineWidth: 2 } }
+  ]
+};
+
+const TEMPLATE_SPRING = {
+  bodies: [
+    { id: 1, x: 400, y: 100, isStatic: true, label: "Platform", customParams: null },
+    { id: 2, x: 400, y: 400, isStatic: false, angle: 0, customParams: { shape: 'rectangle', width: 60, height: 60, color: '#06b6d4', restitution: 0.2, friction: 0.5, mass: 10 } }
+  ],
+  constraints: [
+    { bodyA_id: 1, bodyB_id: 2, length: 200, stiffness: 0.02, damping: 0.05, render: { type: 'spring', strokeStyle: 'rgba(6, 182, 212, 0.6)', lineWidth: 2 } }
+  ]
+};
+
+const TEMPLATE_PROJECTILE = {
+  bodies: [
+    { id: 1, x: 400, y: 550, isStatic: true, label: "Platform", customParams: null },
+    { id: 2, x: 50, y: 500, isStatic: false, angle: 0, velocity: { x: 15, y: -15 }, customParams: { shape: 'circle', radius: 20, color: '#f59e0b', restitution: 0.5, friction: 0.1, density: 0.01 } }
+  ]
+};
+
+const TEMPLATE_COLLISION = {
+  bodies: [
+    { id: 1, x: 400, y: 550, isStatic: true, label: "Platform", customParams: null },
+    { id: 2, x: 100, y: 500, isStatic: false, angle: 0, velocity: { x: 10, y: 0 }, customParams: { shape: 'rectangle', width: 50, height: 50, color: '#10b981', restitution: 0.9, friction: 0 } },
+    { id: 3, x: 700, y: 500, isStatic: false, angle: 0, velocity: { x: -10, y: 0 }, customParams: { shape: 'circle', radius: 25, color: '#8b5cf6', restitution: 0.9, friction: 0 } }
+  ]
+};
 
 const DUMMY_EXPERIMENTS = [
   {
@@ -15,62 +45,44 @@ const DUMMY_EXPERIMENTS = [
     icon: 'cyclone',
     image: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1470&auto=format&fit=crop',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-    color: 'purple'
+    color: 'purple',
+    stateData: TEMPLATE_PENDULUM
   },
   {
     id: 2,
-    title: 'Particle Entanglement',
+    title: 'Spring Oscillator',
     author: 'NEURAL_LINK',
-    status: '',
-    tags: ['Quantum', 'Entropic_State'],
-    icon: 'grain',
+    status: 'Live',
+    tags: ['Oscillations', 'Harmonic'],
+    icon: 'waves',
     image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1364&auto=format&fit=crop',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-    color: 'pink'
+    color: 'cyan',
+    stateData: TEMPLATE_SPRING
   },
   {
     id: 3,
-    title: 'Gravitational Lens Modeling',
+    title: 'Projectile Motion',
     author: 'COSMO_SYS',
-    status: '',
-    tags: ['Cosmic', 'Relativity'],
-    icon: 'auto_awesome',
+    status: 'Live',
+    tags: ['Kinematics', 'Gravity'],
+    icon: 'flight_takeoff',
     image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=1511&auto=format&fit=crop',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
-    color: 'emerald'
+    color: 'amber',
+    stateData: TEMPLATE_PROJECTILE
   },
   {
     id: 4,
-    title: 'Fluidic Navier-Stokes',
+    title: 'Elastic Collisions',
     author: 'FLOW_MASTER',
-    status: '',
-    tags: ['Fluidic', 'Simulation'],
-    icon: 'waves',
+    status: 'Live',
+    tags: ['Momentum', 'Conservation'],
+    icon: 'compare_arrows',
     image: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=1470&auto=format&fit=crop',
     avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
-    color: 'blue'
-  },
-  {
-    id: 5,
-    title: 'String Theory Lattice',
-    author: 'M_THEORY_LAB',
-    status: '',
-    tags: ['Theoretical'],
-    icon: 'blur_on',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1470&auto=format&fit=crop',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
-    color: 'fuchsia'
-  },
-  {
-    id: 6,
-    title: 'Dynamic Surface Tension',
-    author: 'HYDRO_GEN',
-    status: '',
-    tags: ['Fluidic', 'Physics_B'],
-    icon: 'bubble_chart',
-    image: 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=1470&auto=format&fit=crop',
-    color: 'indigo',
-    stateData: TEMPLATE_STATE
+    color: 'emerald',
+    stateData: TEMPLATE_COLLISION
   }
 ]
 
@@ -119,26 +131,23 @@ const ExperimentLibrary = ({ onClose, onExport, onSave, onLoad }) => {
   return (
     <div className="fixed inset-0 z-[10000] bg-[#050505]/95 backdrop-blur-2xl overflow-y-auto text-white selection:bg-purple-500/30 font-space-grotesk animate-in fade-in duration-300">
       
-      {/* TopNavBar */}
-      <nav className="bg-black/40 backdrop-blur-md tracking-tight sticky top-0 z-50 shadow-[0_1px_0px_rgba(255,255,255,0.05)] border-b border-purple-500/10">
-        <div className="flex justify-between items-center w-full px-8 md:px-12 h-16 max-w-[1920px] mx-auto">
-          <div className="text-xl font-black tracking-tighter text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.4)] uppercase">
-            VIRTUAL_LAB // LIBR
+      {/* TopNavBar matching Header.jsx */}
+      <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-14 bg-[#050505]/80 backdrop-blur-md shadow-[inset_0px_1px_0px_rgba(255,255,255,0.05)] text-white">
+        <div className="flex items-center gap-8">
+          <div className="text-xl font-black tracking-tighter text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.4)] font-space-grotesk uppercase">
+            VIRTUAL_LAB
           </div>
-          
-          <div className="hidden md:flex items-center gap-10">
-            <button onClick={onClose} className="text-zinc-500 text-xs font-bold uppercase tracking-widest hover:text-purple-400 transition-colors duration-300">
-              Return to Workspace
-            </button>
-            <a className="text-purple-400 text-xs font-bold uppercase tracking-widest border-b-2 border-purple-500 pb-1" href="#">Library</a>
-            <a className="text-zinc-500 text-xs font-bold uppercase tracking-widest hover:text-purple-400 transition-colors duration-300" href="#">Simulations</a>
+          <div className="hidden md:flex gap-6">
+            <a className="font-space-grotesk uppercase tracking-widest text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer" onClick={onClose}>Simulation</a>
+            <a className="font-space-grotesk uppercase tracking-widest text-xs text-purple-400 border-b-2 border-purple-500 pb-1 cursor-pointer">Library</a>
+            <a className="font-space-grotesk uppercase tracking-widest text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">Environment</a>
           </div>
+        </div>
 
-          <div className="flex items-center gap-6">
-            <button onClick={onClose} className="w-8 h-8 rounded-sm bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 flex items-center justify-center transition-colors border border-purple-500/30">
-              <span className="material-symbols-outlined text-sm">close</span>
-            </button>
-          </div>
+        <div className="flex items-center gap-4">
+          <button onClick={onClose} className="w-8 h-8 rounded-sm bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 flex items-center justify-center transition-colors border border-purple-500/30">
+            <span className="material-symbols-outlined text-sm">close</span>
+          </button>
         </div>
       </nav>
 
@@ -226,13 +235,13 @@ const ExperimentLibrary = ({ onClose, onExport, onSave, onLoad }) => {
                 </div>
 
                 {/* Hover overlay actions */}
-                <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6 z-20">
-                  <button onClick={() => exp.stateData && onLoad(exp.stateData)} className="w-full py-3 bg-purple-600 text-white text-xs font-black tracking-widest uppercase rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500 active:scale-95 transition-all">LOAD STATE</button>
-                  <button onClick={() => exp.isDB && onExport(exp.stateData)} className="w-full py-3 bg-white/5 border border-white/10 text-white text-xs font-bold tracking-widest uppercase rounded-sm hover:bg-white/10 hover:border-purple-500/30 active:scale-95 transition-all">EXPORT AS JSON</button>
+                <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6 z-20" onClick={() => exp.stateData && onLoad(exp.stateData)}>
+                  <button onClick={(e) => { e.stopPropagation(); exp.stateData && onLoad(exp.stateData); }} className="w-full py-3 bg-purple-600 text-white text-xs font-black tracking-widest uppercase rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500 active:scale-95 transition-all cursor-pointer">LOAD STATE</button>
+                  <button onClick={(e) => { e.stopPropagation(); exp.isDB && onExport(exp.stateData); }} className="w-full py-3 bg-white/5 border border-white/10 text-white text-xs font-bold tracking-widest uppercase rounded-sm hover:bg-white/10 hover:border-purple-500/30 active:scale-95 transition-all cursor-pointer">EXPORT AS JSON</button>
                 </div>
               </div>
 
-              <div className="p-6 space-y-4 flex-1 flex flex-col">
+              <div className="p-6 space-y-4 flex-1 flex flex-col cursor-pointer" onClick={() => exp.stateData && onLoad(exp.stateData)}>
                 <div className="flex justify-between items-start">
                   <h3 className="text-xl font-bold tracking-tight text-white group-hover:text-purple-400 transition-colors line-clamp-2 uppercase">{exp.title}</h3>
                   {exp.status === 'Live' && (
