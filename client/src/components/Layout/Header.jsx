@@ -8,7 +8,10 @@ const Header = ({ onOpenLibrary, onOpenLobby, roomCode, participantCount, isConn
         <nav className="hidden md:flex gap-6">
           <a className="font-space-grotesk uppercase tracking-widest text-xs text-purple-400 border-b-2 border-purple-500 pb-1 cursor-pointer">Simulation</a>
           <a className="font-space-grotesk uppercase tracking-widest text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer" onClick={onOpenLibrary}>Library</a>
-          <a className="font-space-grotesk uppercase tracking-widest text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">Environment</a>
+          <a className={`font-space-grotesk uppercase tracking-widest text-xs transition-colors cursor-pointer flex items-center gap-1 ${isConnected ? 'text-emerald-400 hover:text-emerald-300' : 'text-zinc-500 hover:text-zinc-300'}`} onClick={onOpenLobby}>
+            {isConnected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block mr-1"></span>}
+            {isConnected ? 'Collab Active' : 'Multiplayer'}
+          </a>
         </nav>
       </div>
 
@@ -23,20 +26,6 @@ const Header = ({ onOpenLibrary, onOpenLobby, roomCode, participantCount, isConn
         )}
 
         <div className="flex gap-2">
-          <button
-            onClick={onOpenLobby}
-            className={`flex items-center justify-center gap-2 px-4 h-9 rounded-sm transition-all shadow-lg ${
-              isConnected
-                ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 shadow-emerald-500/10'
-                : 'text-white bg-purple-600 hover:bg-purple-500 border border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
-            }`}
-            title="Multiplayer Rooms"
-          >
-            <span className="material-symbols-outlined text-sm">groups</span>
-            <span className="font-space-grotesk text-[10px] uppercase font-bold tracking-widest hidden md:inline">
-              {isConnected ? 'Collab Active' : 'Multiplayer'}
-            </span>
-          </button>
           <button className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:bg-purple-500/10 hover:text-purple-300 transition-all rounded-sm" title="Settings">
             <span className="material-symbols-outlined text-sm">settings</span>
           </button>

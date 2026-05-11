@@ -13,10 +13,10 @@ const TEMPLATE_PENDULUM = {
 const TEMPLATE_SPRING = {
   bodies: [
     { id: 1, x: 400, y: 100, isStatic: true, label: "Platform", customParams: null },
-    { id: 2, x: 400, y: 400, isStatic: false, angle: 0, customParams: { shape: 'rectangle', width: 60, height: 60, color: '#06b6d4', restitution: 0.2, friction: 0.5, mass: 10 } }
+    { id: 2, x: 400, y: 400, isStatic: false, angle: 0, customParams: { shape: 'rectangle', width: 60, height: 60, color: '#06b6d4', restitution: 1, friction: 0, frictionAir: 0, mass: 10 } }
   ],
   constraints: [
-    { bodyA_id: 1, bodyB_id: 2, length: 200, stiffness: 0.02, damping: 0.05, render: { type: 'spring', strokeStyle: 'rgba(6, 182, 212, 0.6)', lineWidth: 2 } }
+    { bodyA_id: 1, bodyB_id: 2, length: 200, stiffness: 0.02, damping: 0, render: { type: 'spring', strokeStyle: 'rgba(6, 182, 212, 0.6)', lineWidth: 2 } }
   ]
 };
 
@@ -30,8 +30,8 @@ const TEMPLATE_PROJECTILE = {
 const TEMPLATE_COLLISION = {
   bodies: [
     { id: 1, x: 400, y: 550, isStatic: true, label: "Platform", customParams: null },
-    { id: 2, x: 100, y: 500, isStatic: false, angle: 0, velocity: { x: 10, y: 0 }, customParams: { shape: 'rectangle', width: 50, height: 50, color: '#10b981', restitution: 0.9, friction: 0 } },
-    { id: 3, x: 700, y: 500, isStatic: false, angle: 0, velocity: { x: -10, y: 0 }, customParams: { shape: 'circle', radius: 25, color: '#8b5cf6', restitution: 0.9, friction: 0 } }
+    { id: 2, x: 100, y: 515, isStatic: false, angle: 0, velocity: { x: 10, y: 0 }, customParams: { shape: 'rectangle', width: 50, height: 50, color: '#10b981', restitution: 1, friction: 0, frictionAir: 0, mass: 10 } },
+    { id: 3, x: 700, y: 515, isStatic: false, angle: 0, velocity: { x: -10, y: 0 }, customParams: { shape: 'circle', radius: 25, color: '#8b5cf6', restitution: 1, friction: 0, frictionAir: 0, mass: 10 } }
   ]
 };
 
@@ -88,8 +88,8 @@ const DUMMY_EXPERIMENTS = [
 
 const ExperimentLibrary = ({ onClose, onExport, onSave, onLoad }) => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [experiments, setExperiments] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [experiments, setExperiments] = useState(DUMMY_EXPERIMENTS)
+  const [isLoading, setIsLoading] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -106,9 +106,7 @@ const ExperimentLibrary = ({ onClose, onExport, onSave, onLoad }) => {
       })
       .catch(err => {
         console.warn('DB Fetch failed:', err)
-        setExperiments(DUMMY_EXPERIMENTS)
       })
-      .finally(() => setIsLoading(false))
   }, [])
 
   const handleFileChange = (e) => {

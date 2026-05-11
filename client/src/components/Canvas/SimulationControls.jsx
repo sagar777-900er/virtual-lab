@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Matter from 'matter-js'
 
-const SimulationControls = ({ isPlaying, onTogglePlay, engine }) => {
+const SimulationControls = ({ isPlaying, onTogglePlay, onReload, engine }) => {
   const [gravity, setGravity] = useState(1)
   const [timeScale, setTimeScale] = useState(1)
 
@@ -45,6 +45,14 @@ const SimulationControls = ({ isPlaying, onTogglePlay, engine }) => {
           title="Step Forward"
         >
           <span className="material-symbols-outlined text-lg">skip_next</span>
+        </button>
+
+        <button 
+          onClick={onReload}
+          className="p-1.5 hover:bg-white/10 rounded-sm text-zinc-400 flex items-center transition-colors"
+          title="Reload Experiment"
+        >
+          <span className="material-symbols-outlined text-lg">replay</span>
         </button>
       </div>
 

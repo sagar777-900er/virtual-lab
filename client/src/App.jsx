@@ -19,6 +19,7 @@ function App() {
   const [showLibrary, setShowLibrary] = useState(false)
   const [showLobby, setShowLobby] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
+  const [currentSnapshot, setCurrentSnapshot] = useState(null)
 
   const canvasRef = useRef(null)
 
@@ -80,6 +81,7 @@ function App() {
   }, [])
 
   const handleLoadExperiment = useCallback((stateData) => {
+    setCurrentSnapshot(stateData)
     canvasRef.current?.loadSnapshot(stateData)
     setShowLibrary(false)
     setIsPlaying(false) // Pause simulation automatically
@@ -88,6 +90,17 @@ function App() {
       icon: '⚡'
     })
   }, [])
+
+  const handleReload = useCallback(() => {
+    if (currentSnapshot) {
+      canvasRef.current?.loadSnapshot(currentSnapshot)
+      setIsPlaying(false)
+      toast.success('Simulation reloaded', {
+        style: { background: '#0a0a0a', color: '#fff', border: '1px solid rgba(168,85,247,0.3)' },
+        icon: '🔄'
+      })
+    }
+  }, [currentSnapshot])
 
   return (
     <div className="bg-background text-on-background h-screen w-screen overflow-hidden font-space-grotesk">
@@ -172,6 +185,7 @@ function App() {
           <SimulationControls
             isPlaying={isPlaying}
             onTogglePlay={() => setIsPlaying(!isPlaying)}
+            onReload={handleReload}
             engine={engine}
           />
         </main>

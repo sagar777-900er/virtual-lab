@@ -147,6 +147,8 @@ const PropertiesPanel = ({ selectedBody, engine, onUpdateBody }) => {
         width: selectedBody.customParams?.width || 10,
         height: selectedBody.customParams?.height || 10,
         sides: selectedBody.customParams?.sides || 3,
+        velocityX: selectedBody.velocity.x,
+        velocityY: selectedBody.velocity.y,
       })
     }
   }, [selectedBody])
@@ -226,6 +228,22 @@ const PropertiesPanel = ({ selectedBody, engine, onUpdateBody }) => {
                     <span className="text-purple-400 font-bold">{(localProps.mass || 1).toFixed(1)} kg</span>
                   </div>
                   <input type="range" min="0.1" max="100" step="0.1" value={localProps.mass || 1} onChange={(e) => handlePropChange('mass', e.target.value)} className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:rounded-full" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[10px] text-zinc-400 mb-1">
+                    <span>Velocity X (Speed)</span>
+                    <span className="text-purple-400 font-bold">{(localProps.velocityX || 0).toFixed(1)} m/s</span>
+                  </div>
+                  <input type="range" min="-50" max="50" step="1" value={localProps.velocityX || 0} onChange={(e) => handlePropChange('velocityX', e.target.value)} className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:rounded-full" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[10px] text-zinc-400 mb-1">
+                    <span>Velocity Y (Launch Angle component)</span>
+                    <span className="text-purple-400 font-bold">{(localProps.velocityY || 0).toFixed(1)} m/s</span>
+                  </div>
+                  <input type="range" min="-50" max="50" step="1" value={localProps.velocityY || 0} onChange={(e) => handlePropChange('velocityY', e.target.value)} className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:rounded-full" />
                 </div>
 
                 <div>
