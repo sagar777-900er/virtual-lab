@@ -5,12 +5,31 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import Experiment from './models/Experiment.js'
+import fs from 'fs/promises'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 dotenv.config()
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const EXPERIMENTS_FILE = path.join(__dirname, 'experiments.json');
+
+let isMongoConnected = false;
+
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/virtual-lab')
-  .then(() => console.log('📦 Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => {
+    isMongoConnected = true;
+    console.log('📦 Connected to MongoDB');
+  })
+  .catch(async err => {
+    console.warn('⚠️ MongoDB connection error, falling back to local JSON file storage.');
+    try {
+      await fs.access(EXPERIMENTS_FILE);
+    } catch {
+      await fs.writeFile(EXPERIMENTS_FILE, JSON.stringify([]));
+    }
+  });
 
 const app = express()
 const httpServer = createServer(app)
@@ -152,8 +171,14 @@ io.on('connection', (socket) => {
 // Routes
 app.get('/api/experiments', async (req, res) => {
   try {
-    const experiments = await Experiment.find().sort({ createdAt: -1 });
-    res.json({ experiments, total: experiments.length })
+    if (isMongoConnected) {
+      const experiments = await Experiment.find().sort({ createdAt: -1 });
+      res.json({ experiments, total: experiments.length })
+    } else {
+      const data = await fs.readFile(EXPERIMENTS_FILE, 'utf-8').catch(() => '[]');
+      const experiments = JSON.parse(data);
+      res.json({ experiments, total: experiments.length })
+    }
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -162,9 +187,27 @@ app.get('/api/experiments', async (req, res) => {
 app.post('/api/experiments', async (req, res) => {
   try {
     const { title, description, thumbnail, stateData, author } = req.body;
-    const newExp = new Experiment({ title, description, thumbnail, stateData, author });
-    const saved = await newExp.save();
-    res.status(201).json(saved);
+    
+    if (isMongoConnected) {
+      const newExp = new Experiment({ title, description, thumbnail, stateData, author });
+      const saved = await newExp.save();
+      res.status(201).json(saved);
+    } else {
+      const data = await fs.readFile(EXPERIMENTS_FILE, 'utf-8').catch(() => '[]');
+      const experiments = JSON.parse(data);
+      const newExp = {
+        _id: Date.now().toString(),
+        title,
+        description,
+        thumbnail,
+        stateData,
+        author: author || 'Anonymous',
+        createdAt: new Date(),
+      };
+      experiments.unshift(newExp);
+      await fs.writeFile(EXPERIMENTS_FILE, JSON.stringify(experiments, null, 2));
+      res.status(201).json(newExp);
+    }
   } catch (err) {
     res.status(400).json({ error: err.message })
   }

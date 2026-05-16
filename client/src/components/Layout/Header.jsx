@@ -1,4 +1,4 @@
-const Header = ({ onOpenLibrary, onOpenLobby, roomCode, participantCount, isConnected }) => {
+const Header = ({ onOpenLibrary, onOpenLobby, roomCode, participantCount, isConnected, onClearAll, onSaveWorkspace }) => {
   return (
     <header className="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-14 bg-[#050505]/80 backdrop-blur-md shadow-[inset_0px_1px_0px_rgba(255,255,255,0.05)] text-white">
       <div className="flex items-center gap-8">
@@ -25,7 +25,13 @@ const Header = ({ onOpenLibrary, onOpenLobby, roomCode, participantCount, isConn
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 mr-2">
+          <button onClick={onClearAll} className="w-8 h-8 flex items-center justify-center text-red-500/70 hover:bg-red-500/10 hover:text-red-400 transition-all rounded-sm" title="Erase Everything">
+            <span className="material-symbols-outlined text-sm">delete_sweep</span>
+          </button>
+          <button onClick={onSaveWorkspace} className="w-8 h-8 flex items-center justify-center text-emerald-500/70 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all rounded-sm" title="Save Workspace to Library">
+            <span className="material-symbols-outlined text-sm">save</span>
+          </button>
           <button className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:bg-purple-500/10 hover:text-purple-300 transition-all rounded-sm" title="Settings">
             <span className="material-symbols-outlined text-sm">settings</span>
           </button>

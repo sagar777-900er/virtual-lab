@@ -86,7 +86,7 @@ const DUMMY_EXPERIMENTS = [
   }
 ]
 
-const ExperimentLibrary = ({ onClose, onExport, onSave, onLoad }) => {
+const ExperimentLibrary = ({ onClose, onOpenLobby, onExport, onSave, onLoad }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [experiments, setExperiments] = useState(DUMMY_EXPERIMENTS)
   const [isLoading, setIsLoading] = useState(false)
@@ -138,7 +138,7 @@ const ExperimentLibrary = ({ onClose, onExport, onSave, onLoad }) => {
           <div className="hidden md:flex gap-6">
             <a className="font-space-grotesk uppercase tracking-widest text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer" onClick={onClose}>Simulation</a>
             <a className="font-space-grotesk uppercase tracking-widest text-xs text-purple-400 border-b-2 border-purple-500 pb-1 cursor-pointer">Library</a>
-            <a className="font-space-grotesk uppercase tracking-widest text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer">Environment</a>
+            <a className="font-space-grotesk uppercase tracking-widest text-xs text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer" onClick={() => { onClose(); onOpenLobby(); }}>Multiplayer</a>
           </div>
         </div>
 

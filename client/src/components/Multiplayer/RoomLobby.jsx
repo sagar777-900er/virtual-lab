@@ -12,6 +12,7 @@ const RoomLobby = ({
 }) => {
   const [joinCode, setJoinCode] = useState('')
   const [userName, setUserName] = useState('Node_' + Math.floor(Math.random() * 9999))
+  const [activeTab, setActiveTab] = useState('rooms')
 
   const handleCreate = () => {
     onCreateRoom(userName)
@@ -37,25 +38,25 @@ const RoomLobby = ({
           <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-500 font-bold">Protocol v4.2</div>
         </div>
         <nav className="flex-1 space-y-1">
-          <div className="px-4 py-2 text-neutral-500 flex items-center space-x-3 cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 transition-colors">
+          <div onClick={() => setActiveTab('dashboard')} className={`px-4 py-2 flex items-center space-x-3 cursor-pointer transition-colors ${activeTab === 'dashboard' ? 'text-purple-400 border-r-2 border-purple-500 bg-purple-500/10' : 'text-neutral-500 hover:bg-neutral-900/80 hover:text-yellow-400'}`}>
             <span className="material-symbols-outlined text-lg">dashboard</span>
             <span className="font-space-grotesk text-xs uppercase tracking-widest font-semibold">Dashboard</span>
           </div>
-          <div className="px-4 py-2 text-purple-400 border-r-2 border-purple-500 bg-purple-500/10 flex items-center space-x-3 cursor-pointer">
+          <div onClick={() => setActiveTab('rooms')} className={`px-4 py-2 flex items-center space-x-3 cursor-pointer transition-colors ${activeTab === 'rooms' ? 'text-purple-400 border-r-2 border-purple-500 bg-purple-500/10' : 'text-neutral-500 hover:bg-neutral-900/80 hover:text-yellow-400'}`}>
             <span className="material-symbols-outlined text-lg">meeting_room</span>
             <span className="font-space-grotesk text-xs uppercase tracking-widest font-semibold">Rooms</span>
           </div>
-          <div className="px-4 py-2 text-neutral-500 flex items-center space-x-3 cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 transition-colors">
+          <div onClick={() => setActiveTab('participants')} className={`px-4 py-2 flex items-center space-x-3 cursor-pointer transition-colors ${activeTab === 'participants' ? 'text-purple-400 border-r-2 border-purple-500 bg-purple-500/10' : 'text-neutral-500 hover:bg-neutral-900/80 hover:text-yellow-400'}`}>
             <span className="material-symbols-outlined text-lg">groups</span>
             <span className="font-space-grotesk text-xs uppercase tracking-widest font-semibold">Participants</span>
           </div>
-          <div className="px-4 py-2 text-neutral-500 flex items-center space-x-3 cursor-pointer hover:bg-neutral-900/80 hover:text-yellow-400 transition-colors">
+          <div onClick={() => setActiveTab('permissions')} className={`px-4 py-2 flex items-center space-x-3 cursor-pointer transition-colors ${activeTab === 'permissions' ? 'text-purple-400 border-r-2 border-purple-500 bg-purple-500/10' : 'text-neutral-500 hover:bg-neutral-900/80 hover:text-yellow-400'}`}>
             <span className="material-symbols-outlined text-lg">security</span>
             <span className="font-space-grotesk text-xs uppercase tracking-widest font-semibold">Permissions</span>
           </div>
         </nav>
         <div className="mt-auto px-4 py-6 border-t border-white/5">
-          <div className="px-4 py-2 text-neutral-500 flex items-center space-x-3 cursor-pointer hover:text-yellow-400 transition-colors">
+          <div onClick={() => { onLeaveRoom(); onClose(); }} className="px-4 py-2 text-red-500/70 flex items-center space-x-3 cursor-pointer hover:text-red-400 transition-colors">
             <span className="material-symbols-outlined text-lg">power_settings_new</span>
             <span className="font-space-grotesk text-xs uppercase tracking-widest font-semibold">Disconnect</span>
           </div>
@@ -89,86 +90,88 @@ const RoomLobby = ({
                   </span>
                 </div>
                 <h1 className="text-5xl font-black font-space-grotesk tracking-tighter text-white">
-                  {roomCode ? 'Room Settings' : 'Multiplayer Lobby'}
+                  {activeTab === 'participants' ? 'Participants' : activeTab === 'permissions' ? 'Permissions' : roomCode ? 'Room Settings' : 'Multiplayer Lobby'}
                 </h1>
               </div>
             </div>
 
-            {/* Not in a room — Show Create/Join UI */}
-            {!roomCode && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Create Room Card */}
-                <div className="glass-card p-6 rounded-lg relative overflow-hidden bg-[rgba(38,38,38,0.2)] backdrop-blur-[12px] border border-purple-500/5 hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.08)] transition-all">
-                  <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <span className="material-symbols-outlined text-7xl text-purple-500">add_circle</span>
-                  </div>
-                  <div className="relative z-10 space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold mb-2">Deploy New Room</h3>
-                    
-                    <div>
-                      <label className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold block mb-2">Your Display Name</label>
-                      <input
-                        type="text"
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                        className="w-full bg-black/40 px-4 py-3 border border-white/5 text-white font-space-grotesk tracking-widest text-sm outline-none focus:border-purple-500/50 transition-colors rounded-sm"
-                        placeholder="Enter your name..."
-                      />
+            {/* Dashboard / Rooms Tab */}
+            {(activeTab === 'dashboard' || activeTab === 'rooms') && (
+              <>
+                {!roomCode && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Create Room Card */}
+                    <div className="glass-card p-6 rounded-lg relative overflow-hidden bg-[rgba(38,38,38,0.2)] backdrop-blur-[12px] border border-purple-500/5 hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.08)] transition-all">
+                      <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <span className="material-symbols-outlined text-7xl text-purple-500">add_circle</span>
+                      </div>
+                      <div className="relative z-10 space-y-6">
+                        <h3 className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold mb-2">Deploy New Room</h3>
+                        
+                        <div>
+                          <label className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold block mb-2">Your Display Name</label>
+                          <input
+                            type="text"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            className="w-full bg-black/40 px-4 py-3 border border-white/5 text-white font-space-grotesk tracking-widest text-sm outline-none focus:border-purple-500/50 transition-colors rounded-sm"
+                            placeholder="Enter your name..."
+                          />
+                        </div>
+
+                        <button
+                          onClick={handleCreate}
+                          className="w-full py-3 bg-gradient-to-br from-purple-600 to-purple-800 text-white font-space-grotesk text-[10px] uppercase tracking-widest font-bold rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] active:scale-95 transition-transform flex items-center justify-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-sm">rocket_launch</span>
+                          Deploy New Room
+                        </button>
+                      </div>
                     </div>
 
-                    <button
-                      onClick={handleCreate}
-                      className="w-full py-3 bg-gradient-to-br from-purple-600 to-purple-800 text-white font-space-grotesk text-[10px] uppercase tracking-widest font-bold rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] active:scale-95 transition-transform flex items-center justify-center gap-2"
-                    >
-                      <span className="material-symbols-outlined text-sm">rocket_launch</span>
-                      Deploy New Room
-                    </button>
-                  </div>
-                </div>
+                    {/* Join Room Card */}
+                    <div className="glass-card p-6 rounded-lg relative overflow-hidden bg-[rgba(38,38,38,0.2)] backdrop-blur-[12px] border border-purple-500/5 hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.08)] transition-all">
+                      <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <span className="material-symbols-outlined text-7xl text-purple-500">key</span>
+                      </div>
+                      <div className="relative z-10 space-y-6">
+                        <h3 className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold mb-2">Join Existing Room</h3>
 
-                {/* Join Room Card */}
-                <div className="glass-card p-6 rounded-lg relative overflow-hidden bg-[rgba(38,38,38,0.2)] backdrop-blur-[12px] border border-purple-500/5 hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.08)] transition-all">
-                  <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <span className="material-symbols-outlined text-7xl text-purple-500">key</span>
-                  </div>
-                  <div className="relative z-10 space-y-6">
-                    <h3 className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold mb-2">Join Existing Room</h3>
+                        <div>
+                          <label className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold block mb-2">Your Display Name</label>
+                          <input
+                            type="text"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            className="w-full bg-black/40 px-4 py-3 border border-white/5 text-white font-space-grotesk tracking-widest text-sm outline-none focus:border-purple-500/50 transition-colors rounded-sm"
+                            placeholder="Enter your name..."
+                          />
+                        </div>
 
-                    <div>
-                      <label className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold block mb-2">Your Display Name</label>
-                      <input
-                        type="text"
-                        value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                        className="w-full bg-black/40 px-4 py-3 border border-white/5 text-white font-space-grotesk tracking-widest text-sm outline-none focus:border-purple-500/50 transition-colors rounded-sm"
-                        placeholder="Enter your name..."
-                      />
+                        <div>
+                          <label className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold block mb-2">Session Key</label>
+                          <input
+                            type="text"
+                            value={joinCode}
+                            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                            maxLength={6}
+                            className="w-full bg-black/40 px-4 py-3 border border-white/5 text-white font-space-grotesk tracking-[0.3em] text-2xl font-black text-center outline-none focus:border-purple-500/50 transition-colors rounded-sm"
+                            placeholder="XXXXXX"
+                          />
+                        </div>
+
+                        <button
+                          onClick={handleJoin}
+                          disabled={joinCode.trim().length === 0}
+                          className="w-full py-3 bg-white/5 border border-white/10 text-neutral-300 font-space-grotesk text-[10px] uppercase tracking-widest font-bold rounded-sm hover:bg-white/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <span className="material-symbols-outlined text-sm">login</span>
+                          Connect to Room
+                        </button>
+                      </div>
                     </div>
-
-                    <div>
-                      <label className="text-[10px] uppercase tracking-widest text-neutral-500 font-space-grotesk font-bold block mb-2">Session Key</label>
-                      <input
-                        type="text"
-                        value={joinCode}
-                        onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                        maxLength={6}
-                        className="w-full bg-black/40 px-4 py-3 border border-white/5 text-white font-space-grotesk tracking-[0.3em] text-2xl font-black text-center outline-none focus:border-purple-500/50 transition-colors rounded-sm"
-                        placeholder="XXXXXX"
-                      />
-                    </div>
-
-                    <button
-                      onClick={handleJoin}
-                      disabled={joinCode.trim().length === 0}
-                      className="w-full py-3 bg-white/5 border border-white/10 text-neutral-300 font-space-grotesk text-[10px] uppercase tracking-widest font-bold rounded-sm hover:bg-white/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <span className="material-symbols-outlined text-sm">login</span>
-                      Connect to Room
-                    </button>
                   </div>
-                </div>
-              </div>
-            )}
+                )}
 
             {/* In a room — Show Room Details */}
             {roomCode && (
@@ -195,48 +198,6 @@ const RoomLobby = ({
                         Share this session key with others to authorize them into your workspace.
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Participants */}
-                <div className="glass-card p-6 rounded-lg bg-[rgba(38,38,38,0.2)] backdrop-blur-[12px] border border-purple-500/5">
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="font-space-grotesk text-lg font-bold tracking-tight text-white flex items-center">
-                      <span className="material-symbols-outlined text-purple-500 mr-2">groups</span>
-                      Participants
-                    </h3>
-                    <span className="text-[10px] bg-purple-500/20 text-purple-400 px-3 py-1 rounded font-bold uppercase tracking-widest">
-                      {participants.length} Nodes Online
-                    </span>
-                  </div>
-                  <div className="space-y-3">
-                    {participants.map((p, i) => (
-                      <div
-                        key={p.id}
-                        className={`flex items-center justify-between p-4 rounded-sm transition-colors ${
-                          i === 0 ? 'bg-neutral-900/50 border-l-2 border-yellow-400' : 'bg-neutral-900/30 hover:bg-neutral-900/60'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 rounded-sm border border-white/5 bg-purple-500/10 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-purple-400 text-lg">person</span>
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <span className="font-space-grotesk text-sm font-bold text-white tracking-tight">{p.username || 'Unknown'}</span>
-                              {i === 0 && (
-                                <span className="text-[8px] bg-yellow-400/10 text-yellow-400 px-1.5 py-0.5 rounded font-black uppercase">Host</span>
-                              )}
-                            </div>
-                            <div className="text-[10px] text-neutral-500 uppercase tracking-widest">ID: {p.id?.slice(0, 8)}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
-                          <span className="text-[10px] text-neutral-400 font-bold uppercase">Active</span>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
 
@@ -267,6 +228,72 @@ const RoomLobby = ({
                   <p className="text-[10px] text-neutral-600 mt-6 uppercase tracking-widest font-bold">Node Disconnection Protocol</p>
                 </div>
               </>
+            )}
+
+              </>
+            )}
+
+            {/* Participants Tab */}
+            {activeTab === 'participants' && (
+              <div className="glass-card p-6 rounded-lg bg-[rgba(38,38,38,0.2)] backdrop-blur-[12px] border border-purple-500/5">
+                {!roomCode ? (
+                  <div className="text-center p-8 text-neutral-500 font-space-grotesk text-sm font-bold tracking-widest uppercase">
+                    Connect to a room to view participants.
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="font-space-grotesk text-lg font-bold tracking-tight text-white flex items-center">
+                        <span className="material-symbols-outlined text-purple-500 mr-2">groups</span>
+                        Participants
+                      </h3>
+                      <span className="text-[10px] bg-purple-500/20 text-purple-400 px-3 py-1 rounded font-bold uppercase tracking-widest">
+                        {participants.length} Nodes Online
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {participants.map((p, i) => (
+                        <div
+                          key={p.id}
+                          className={`flex items-center justify-between p-4 rounded-sm transition-colors ${
+                            i === 0 ? 'bg-neutral-900/50 border-l-2 border-yellow-400' : 'bg-neutral-900/30 hover:bg-neutral-900/60'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 rounded-sm border border-white/5 bg-purple-500/10 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-purple-400 text-lg">person</span>
+                            </div>
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <span className="font-space-grotesk text-sm font-bold text-white tracking-tight">{p.username || 'Unknown'}</span>
+                                {i === 0 && (
+                                  <span className="text-[8px] bg-yellow-400/10 text-yellow-400 px-1.5 py-0.5 rounded font-black uppercase">Host</span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-neutral-500 uppercase tracking-widest">ID: {p.id?.slice(0, 8)}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+                            <span className="text-[10px] text-neutral-400 font-bold uppercase">Active</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Permissions Tab */}
+            {activeTab === 'permissions' && (
+              <div className="glass-card p-8 rounded-lg bg-[rgba(38,38,38,0.2)] backdrop-blur-[12px] border border-purple-500/5 text-center flex flex-col items-center justify-center min-h-[300px]">
+                <span className="material-symbols-outlined text-6xl text-purple-500/30 mb-4">admin_panel_settings</span>
+                <h3 className="text-xl font-space-grotesk font-bold text-white mb-2 tracking-widest">Access Control</h3>
+                <p className="text-sm text-neutral-500 max-w-sm tracking-wide">
+                  Advanced room permissions and moderation controls are currently active in default mode. Only the host can transfer session rights.
+                </p>
+              </div>
             )}
 
           </div>

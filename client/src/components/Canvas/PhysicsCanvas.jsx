@@ -616,25 +616,13 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
     return () => clearInterval(interval)
   }, [multiplayer, isPlaying])
 
-  // Handle canvas click to add shapes
-  const handleCanvasClick = useCallback((e) => {
-    if (!engineRef.current) return
-    if (selectedTool === 'select') return
-
-    // Only process clicks directly on the canvas element itself
-    const canvasEl = canvasRef.current?.querySelector('canvas')
-    if (!canvasEl || e.target !== canvasEl) return
-
-    const rect = canvasEl.getBoundingClientRect()
-
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+  const addShapeAt = useCallback((type, x, y) => {
     const engine = engineRef.current
+    if (!engine) return
     const color = getNextColor()
-
     let body = null
 
-    switch (selectedTool) {
+    switch (type) {
       case 'circle': {
         const radius = 25 + Math.random() * 15;
         body = Bodies.circle(x, y, radius, {
@@ -649,7 +637,6 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
         body.customParams = { shape: 'circle', radius, color, restitution: 0.5, friction: 0.1 }
         break
       }
-
       case 'rectangle': {
         const width = 50 + Math.random() * 30;
         const height = 40 + Math.random() * 20;
@@ -665,7 +652,6 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
         body.customParams = { shape: 'rectangle', width, height, color, restitution: 0.3, friction: 0.1 }
         break
       }
-
       case 'triangle': {
         const radius = 30 + Math.random() * 10;
         body = Bodies.polygon(x, y, 3, radius, {
@@ -680,7 +666,6 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
         body.customParams = { shape: 'polygon', sides: 3, radius, color, restitution: 0.4, friction: 0.1 }
         break
       }
-
       case 'ground':
         body = Bodies.rectangle(x, y, 200, 20, {
           isStatic: true,
@@ -692,7 +677,6 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
           label: 'Platform',
         })
         break
-
       case 'wall':
         body = Bodies.rectangle(x, y, 20, 150, {
           isStatic: true,
@@ -704,7 +688,91 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
           label: 'Wall',
         })
         break
+      default:
+        return
+    }
 
+    if (body) {
+      Composite.add(engine.world, body)
+      setActionHistory(prev => [...prev, { type: 'body', id: body.id }])
+      setRedoStack([])
+      onBodySelect(body)
+
+      if (multiplayer?.sendBodyCreated) {
+        const bodyData = {
+          remoteId: body.id,
+          shape: type === 'circle' ? 'circle' : type === 'rectangle' ? 'rectangle' : 'polygon',
+          x: body.position.x,
+          y: body.position.y,
+          color: body.render.fillStyle,
+          restitution: body.restitution,
+          friction: body.friction,
+        }
+        if (type === 'circle') bodyData.radius = body.circleRadius
+        else if (type === 'rectangle') {
+          bodyData.width = body.bounds.max.x - body.bounds.min.x
+          bodyData.height = body.bounds.max.y - body.bounds.min.y
+        } else {
+          bodyData.sides = body.vertices.length
+          bodyData.radius = 30
+        }
+        multiplayer.sendBodyCreated(bodyData)
+      }
+    }
+  }, [onBodySelect, multiplayer])
+
+  // Handle canvas click to add shapes or tools
+  const handleCanvasClick = useCallback((e) => {
+    if (!engineRef.current) return
+
+    // Only process clicks directly on the canvas element itself
+    const canvasEl = canvasRef.current?.querySelector('canvas')
+    if (!canvasEl || e.target !== canvasEl) return
+
+    const rect = canvasEl.getBoundingClientRect()
+
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const engine = engineRef.current
+
+    if (selectedTool === 'select') {
+      const bodies = Composite.allBodies(engine.world)
+      const clickedBodies = Matter.Query.point(bodies, { x, y })
+
+      if (clickedBodies.length > 0) {
+        const body = clickedBodies[0]
+        if (!body.isStatic || body.label !== 'Ground') {
+          bodies.forEach(b => {
+             if (b._wasSelected) {
+                b.render.lineWidth = b.customParams?.hasGlow ? 3 : 1;
+                b.render.strokeStyle = b.customParams?.hasGlow ? b.render.fillStyle : 'rgba(255,255,255,0.1)';
+                b._wasSelected = false;
+             }
+          });
+          body._wasSelected = true;
+          body.render.lineWidth = 4;
+          body.render.strokeStyle = '#a855f7'; // Purple glow
+          onBodySelect(body)
+        }
+      } else {
+          bodies.forEach(b => {
+             if (b._wasSelected) {
+                b.render.lineWidth = b.customParams?.hasGlow ? 3 : 1;
+                b.render.strokeStyle = b.customParams?.hasGlow ? b.render.fillStyle : 'rgba(255,255,255,0.1)';
+                b._wasSelected = false;
+             }
+          });
+          onBodySelect(null);
+      }
+      return
+    }
+
+    if (['circle', 'rectangle', 'triangle', 'ground', 'wall'].includes(selectedTool)) {
+      addShapeAt(selectedTool, x, y)
+      return
+    }
+
+    switch (selectedTool) {
       case 'delete': {
         const bodies = Composite.allBodies(engine.world)
         const clicked = Matter.Query.point(bodies, { x, y })
@@ -827,36 +895,7 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       default:
         return
     }
-
-    if (body) {
-      Composite.add(engine.world, body)
-      setActionHistory(prev => [...prev, { type: 'body', id: body.id }])
-      setRedoStack([])
-      onBodySelect(body)
-
-      // Broadcast to multiplayer
-      if (multiplayer?.sendBodyCreated) {
-        const bodyData = {
-          remoteId: body.id,
-          shape: selectedTool === 'circle' ? 'circle' : selectedTool === 'rectangle' ? 'rectangle' : 'polygon',
-          x: body.position.x,
-          y: body.position.y,
-          color: body.render.fillStyle,
-          restitution: body.restitution,
-          friction: body.friction,
-        }
-        if (selectedTool === 'circle') bodyData.radius = body.circleRadius
-        else if (selectedTool === 'rectangle') {
-          bodyData.width = body.bounds.max.x - body.bounds.min.x
-          bodyData.height = body.bounds.max.y - body.bounds.min.y
-        } else {
-          bodyData.sides = body.vertices.length
-          bodyData.radius = 30
-        }
-        multiplayer.sendBodyCreated(bodyData)
-      }
-    }
-  }, [selectedTool, onBodySelect, multiplayer])
+  }, [selectedTool, onBodySelect, multiplayer, addShapeAt])
 
   // Cursor style based on tool
   const getCursorStyle = () => {
@@ -871,12 +910,32 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
     }
   }
 
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }, [])
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault()
+    const toolId = e.dataTransfer.getData('shapeType')
+    if (!toolId) return
+
+    const canvasEl = canvasRef.current?.querySelector('canvas') || canvasRef.current
+    const rect = canvasEl.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    addShapeAt(toolId, x, y)
+  }, [addShapeAt])
+
   return (
     <div
       ref={canvasRef}
       className="w-full h-full relative"
       style={{ cursor: getCursorStyle() }}
       onClick={handleCanvasClick}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       {/* Grid overlay */}
       <div className="absolute inset-0 pointer-events-none" style={{

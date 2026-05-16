@@ -20,6 +20,10 @@ function App() {
   const [showLobby, setShowLobby] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [currentSnapshot, setCurrentSnapshot] = useState(null)
+  
+  // Custom Save Modal State
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [saveName, setSaveName] = useState('My Custom Workspace')
 
   const canvasRef = useRef(null)
 
@@ -80,6 +84,17 @@ function App() {
     }
   }, [])
 
+  const handleSavePrompt = useCallback(() => {
+    setShowSaveModal(true)
+  }, [])
+
+  const submitSave = useCallback(() => {
+    if (saveName.trim()) {
+      handleSaveExperiment(saveName.trim())
+      setShowSaveModal(false)
+    }
+  }, [saveName, handleSaveExperiment])
+
   const handleLoadExperiment = useCallback((stateData) => {
     setCurrentSnapshot(stateData)
     canvasRef.current?.loadSnapshot(stateData)
@@ -113,6 +128,7 @@ function App() {
       {showLibrary && (
         <ExperimentLibrary 
           onClose={() => setShowLibrary(false)} 
+          onOpenLobby={() => setShowLobby(true)}
           onExport={handleExport}
           onSave={handleSaveExperiment}
           onLoad={handleLoadExperiment}
@@ -133,6 +149,42 @@ function App() {
         />
       )}
 
+      {/* Save Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-[20000] flex items-center justify-center font-space-grotesk animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowSaveModal(false)} />
+          <div className="relative glass-card p-8 rounded-lg bg-[rgba(38,38,38,0.4)] backdrop-blur-[20px] border border-purple-500/20 w-[400px] shadow-[0_0_30px_rgba(168,85,247,0.15)] flex flex-col gap-6">
+            <h3 className="text-xl font-black text-white uppercase tracking-widest text-center">Save Workspace</h3>
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase tracking-widest text-neutral-400 font-bold">Workspace Name</label>
+              <input 
+                type="text" 
+                value={saveName} 
+                onChange={(e) => setSaveName(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && submitSave()}
+                className="w-full bg-black/60 px-4 py-3 border border-white/10 text-white font-space-grotesk tracking-widest text-sm outline-none focus:border-purple-500/50 transition-colors rounded-sm text-center"
+              />
+            </div>
+            <div className="flex gap-4 pt-2">
+              <button 
+                onClick={() => setShowSaveModal(false)} 
+                className="flex-1 py-3 bg-neutral-900 border border-white/10 text-neutral-400 text-xs font-bold tracking-widest uppercase rounded-sm hover:bg-neutral-800 hover:text-white transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={submitSave} 
+                className="flex-1 py-3 bg-purple-600 text-white text-xs font-black tracking-widest uppercase rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:bg-purple-500 transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[14px]">cloud_upload</span>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Header */}
       <Header
         onOpenLibrary={() => setShowLibrary(true)}
@@ -140,6 +192,8 @@ function App() {
         roomCode={multiplayer.roomCode}
         participantCount={multiplayer.participants.length}
         isConnected={multiplayer.isConnected}
+        onClearAll={() => canvasRef.current?.clearAll()}
+        onSaveWorkspace={handleSavePrompt}
       />
 
       {/* Main Layout Content */}

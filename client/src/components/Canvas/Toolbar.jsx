@@ -14,6 +14,12 @@ const Toolbar = ({ selectedTool, onToolSelect, showAnalytics, onUndo, onRedo, on
     { id: 'analyze', icon: 'insights', label: 'Analyze' },
   ]
 
+  const shapes = ['circle', 'rectangle', 'triangle', 'ground', 'wall']
+  const handleDragStart = (e, toolId) => {
+    e.dataTransfer.setData('shapeType', toolId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
   return (
     <aside className="fixed left-0 top-14 h-[calc(100vh-3.5rem)] flex flex-col items-center py-4 z-40 bg-[#050505]/90 backdrop-blur-2xl w-20 border-r border-white/5 overflow-y-auto no-scrollbar">
       <div className="flex flex-col items-center gap-6 w-full">
@@ -26,7 +32,30 @@ const Toolbar = ({ selectedTool, onToolSelect, showAnalytics, onUndo, onRedo, on
 
         {/* Tools Section */}
         <div className="flex flex-col gap-2 w-full px-2">
-          {tools.map((tool) => {
+          <div className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest text-center mt-1 mb-1">Shapes</div>
+          {tools.filter(t => shapes.includes(t.id)).map((tool) => {
+            const isActive = selectedTool === tool.id
+            return (
+              <button
+                key={tool.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, tool.id)}
+                onClick={() => onToolSelect(tool.id)}
+                className={`w-full flex flex-col items-center py-2.5 rounded-lg transition-all cursor-grab active:cursor-grabbing ${
+                  isActive
+                    ? 'bg-purple-500/20 text-purple-400 border-r-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 grayscale hover:grayscale-0'
+                }`}
+                title={`${tool.label} (Click or Drag)`}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{tool.icon}</span>
+                <span className="font-inter text-[9px] font-medium tracking-tight mt-1 uppercase">{tool.label}</span>
+              </button>
+            )
+          })}
+
+          <div className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest text-center mt-3 mb-1 border-t border-white/10 pt-3">Tools</div>
+          {tools.filter(t => !shapes.includes(t.id)).map((tool) => {
             const isActive = tool.id === 'analyze' ? showAnalytics : selectedTool === tool.id
             return (
               <button
