@@ -15,6 +15,7 @@ export default function useMultiplayer() {
   // Event callback refs (set by the consuming component)
   const onBodyAddedRef = useRef(null)
   const onBodyRemovedRef = useRef(null)
+  const onBodyChangedRef = useRef(null)
   const onCursorUpdateRef = useRef(null)
   const onPhysicsSyncRef = useRef(null)
 
@@ -76,6 +77,12 @@ export default function useMultiplayer() {
     socket.on('body-removed', (data) => {
       if (onBodyRemovedRef.current) {
         onBodyRemovedRef.current(data.bodyId)
+      }
+    })
+
+    socket.on('body-changed', (data) => {
+      if (onBodyChangedRef.current) {
+        onBodyChangedRef.current(data)
       }
     })
 
@@ -168,6 +175,13 @@ export default function useMultiplayer() {
     }
   }, [roomCode])
 
+  // Broadcast body update
+  const sendBodyUpdated = useCallback((bodyId, updates) => {
+    if (socketRef.current && roomCode) {
+      socketRef.current.emit('body-updated', { roomCode, bodyId, updates })
+    }
+  }, [roomCode])
+
   // Broadcast cursor movement
   const sendCursorMove = useCallback((position) => {
     if (socketRef.current && roomCode) {
@@ -183,9 +197,10 @@ export default function useMultiplayer() {
   }, [roomCode, isHost])
 
   // Set event handlers from consuming component
-  const setHandlers = useCallback(({ onBodyAdded, onBodyRemoved, onCursorUpdate, onPhysicsSync }) => {
+  const setHandlers = useCallback(({ onBodyAdded, onBodyRemoved, onBodyChanged, onCursorUpdate, onPhysicsSync }) => {
     onBodyAddedRef.current = onBodyAdded || null
     onBodyRemovedRef.current = onBodyRemoved || null
+    onBodyChangedRef.current = onBodyChanged || null
     onCursorUpdateRef.current = onCursorUpdate || null
     onPhysicsSyncRef.current = onPhysicsSync || null
   }, [])
@@ -211,6 +226,7 @@ export default function useMultiplayer() {
     leaveRoom,
     sendBodyCreated,
     sendBodyDeleted,
+    sendBodyUpdated,
     sendCursorMove,
     sendPhysicsUpdate,
     setHandlers,

@@ -143,6 +143,11 @@ io.on('connection', (socket) => {
     socket.to(roomCode).emit('body-removed', { socketId: socket.id, bodyId })
   })
 
+  // Body updated (for dragging and property changes)
+  socket.on('body-updated', ({ roomCode, bodyId, updates }) => {
+    socket.to(roomCode).emit('body-changed', { socketId: socket.id, bodyId, updates })
+  })
+
   // Disconnect
   socket.on('disconnect', () => {
     console.log(`[Socket] Disconnected: ${socket.id}`)

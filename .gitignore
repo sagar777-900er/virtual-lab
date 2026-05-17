@@ -1,2 +1,5 @@
 node_modules
 client/dist/
+
+# Do not push the video script/guide
+virtual_lab_video_guide.md

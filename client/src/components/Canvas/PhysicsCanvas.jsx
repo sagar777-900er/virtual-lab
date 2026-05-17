@@ -192,6 +192,10 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
             body = Bodies.rectangle(bData.x, bData.y, width, height, { render: renderOpts, restitution: bData.restitution ?? restitution, friction: bData.friction ?? friction });
           } else if (shape === 'polygon') {
             body = Bodies.polygon(bData.x, bData.y, sides, radius, { render: renderOpts, restitution: bData.restitution ?? restitution, friction: bData.friction ?? friction });
+          } else if (shape === 'wedge') {
+            const w = bData.customParams.width || 100;
+            const h = w * Math.tan((bData.customParams.wedgeAngle || 30) * Math.PI / 180);
+            body = Bodies.fromVertices(bData.x, bData.y, [[{x:0, y:0}, {x:w, y:0}, {x:0, y:-h}]], { isStatic: true, render: renderOpts, restitution: bData.restitution ?? restitution, friction: bData.friction ?? friction });
           }
           
           if (body) {
@@ -249,7 +253,7 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       const target = bodies.find(b => b.id === id);
       if (!target) return;
 
-      const needsRecreation = ['width', 'height', 'radius', 'sides'].some(key => key in updates);
+      const needsRecreation = ['width', 'height', 'radius', 'sides', 'wedgeAngle'].some(key => key in updates);
       
       if (needsRecreation && target.customParams) {
         // Recreate body to correctly resize
@@ -269,6 +273,10 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
           newBody = Bodies.rectangle(x, y, width, height, { render: renderOpts, restitution, friction });
         } else if (shape === 'polygon') {
           newBody = Bodies.polygon(x, y, sides, radius, { render: renderOpts, restitution, friction });
+        } else if (shape === 'wedge') {
+          const w = customParams.width || 100;
+          const h = w * Math.tan((customParams.wedgeAngle || 30) * Math.PI / 180);
+          newBody = Bodies.fromVertices(x, y, [[{x:0, y:0}, {x:w, y:0}, {x:0, y:-h}]], { isStatic: true, render: renderOpts, restitution, friction });
         }
 
         if (newBody) {
@@ -317,6 +325,11 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
             x: updates.velocityX ?? target.velocity.x, 
             y: updates.velocityY ?? target.velocity.y 
           });
+        }
+        
+        // Broadcast direct property changes to others
+        if (multiplayer?.sendBodyUpdated) {
+           multiplayer.sendBodyUpdated(target._remoteId || target.id, updates);
         }
         
         // Visuals
@@ -436,6 +449,24 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       });
     });
 
+    // Broadcast position when dragging
+    Events.on(engine, 'afterUpdate', () => {
+      if (mouseConstraintRef.current && mouseConstraintRef.current.body) {
+         const b = mouseConstraintRef.current.body;
+         // Send dragging updates to others
+         if (multiplayer?.sendBodyUpdated) {
+            multiplayer.sendBodyUpdated(b._remoteId || b.id, {
+               x: b.position.x,
+               y: b.position.y,
+               vx: b.velocity.x,
+               vy: b.velocity.y,
+               angle: b.angle,
+               angularVelocity: b.angularVelocity
+            });
+         }
+      }
+    });
+
     // Body selection on click
     Events.on(mouseConstraint, 'mousedown', (event) => {
       const bodies = Composite.allBodies(engine.world)
@@ -534,6 +565,17 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
               friction: bodyData.friction || 0.1,
             })
             break
+          case 'wedge': {
+            const w = bodyData.width || 100;
+            const h = w * Math.tan((bodyData.wedgeAngle || 30) * Math.PI / 180);
+            body = Bodies.fromVertices(bodyData.x, bodyData.y, [[{x:0, y:0}, {x:w, y:0}, {x:0, y:-h}]], {
+              isStatic: true,
+              render: { fillStyle: bodyData.color || '#6366f1', strokeStyle: 'rgba(255,255,255,0.1)', lineWidth: 1 },
+              restitution: bodyData.restitution || 0.1,
+              friction: bodyData.friction || 0.5,
+            })
+            break
+          }
           default:
             return
         }
@@ -560,6 +602,12 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
         data.bodies.forEach(remote => {
           const local = localBodies.find(b => b.id === remote.id || b._remoteId === remote.id)
           if (local && !local.isStatic && !local.isSleeping) {
+            // FIX: If the local user is currently dragging this body, ignore the host's physics sync
+            // to prevent the object from stuttering/glitching up and down.
+            if (mouseConstraintRef.current && mouseConstraintRef.current.body === local) {
+              return;
+            }
+            
             // Apply smoothing lag compensation
             Body.setPosition(local, { 
               x: lerp(local.position.x, remote.x, factor), 
@@ -573,6 +621,42 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
             Body.setAngularVelocity(local, lerp(local.angularVelocity, remote.aVel, factor))
           }
         })
+      },
+      onBodyChanged: (data) => {
+        const engine = engineRef.current
+        if (!engine || !data.updates) return
+        const localBodies = Composite.allBodies(engine.world)
+        const target = localBodies.find(b => b.id === data.bodyId || b._remoteId === data.bodyId)
+        if (target) {
+           if ('mass' in data.updates) Body.setMass(target, data.updates.mass);
+           if ('density' in data.updates) Body.setDensity(target, data.updates.density);
+           if ('friction' in data.updates) target.friction = data.updates.friction;
+           if ('restitution' in data.updates) target.restitution = data.updates.restitution;
+           if ('frictionAir' in data.updates) target.frictionAir = data.updates.frictionAir;
+           if ('isStatic' in data.updates) Body.setStatic(target, data.updates.isStatic);
+           if ('angle' in data.updates) Body.setAngle(target, data.updates.angle);
+           if ('angularVelocity' in data.updates) Body.setAngularVelocity(target, data.updates.angularVelocity);
+           
+           if ('x' in data.updates && 'y' in data.updates) {
+             Body.setPosition(target, { x: data.updates.x, y: data.updates.y });
+           }
+           if ('vx' in data.updates && 'vy' in data.updates) {
+             Body.setVelocity(target, { x: data.updates.vx, y: data.updates.vy });
+           }
+           
+           if (target.customParams) {
+             if ('color' in data.updates) {
+               target.render.fillStyle = data.updates.color;
+               if (target.customParams.hasGlow) target.render.strokeStyle = data.updates.color;
+             }
+             if ('opacity' in data.updates) target.render.opacity = data.updates.opacity;
+             if ('hasGlow' in data.updates) {
+               target.render.lineWidth = data.updates.hasGlow ? 3 : 1;
+               target.render.strokeStyle = data.updates.hasGlow ? target.render.fillStyle : 'rgba(255,255,255,0.1)';
+             }
+             target.customParams = { ...target.customParams, ...data.updates };
+           }
+        }
       },
     })
   }, [multiplayer])
@@ -666,6 +750,25 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
         body.customParams = { shape: 'polygon', sides: 3, radius, color, restitution: 0.4, friction: 0.1 }
         break
       }
+      case 'wedge': {
+        const width = 150;
+        const wedgeAngle = 30; // degrees
+        const height = width * Math.tan(wedgeAngle * Math.PI / 180);
+        const vertices = [
+          { x: 0, y: 0 },
+          { x: width, y: 0 },
+          { x: 0, y: -height }
+        ];
+        body = Bodies.fromVertices(x, y, [vertices], {
+          isStatic: true,
+          render: { fillStyle: color, strokeStyle: 'rgba(255,255,255,0.1)', lineWidth: 1 },
+          restitution: 0.1,
+          friction: 0.5,
+          label: 'Wedge'
+        });
+        body.customParams = { shape: 'wedge', width, wedgeAngle, color, restitution: 0.1, friction: 0.5 };
+        break
+      }
       case 'ground':
         body = Bodies.rectangle(x, y, 200, 20, {
           isStatic: true,
@@ -701,7 +804,7 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       if (multiplayer?.sendBodyCreated) {
         const bodyData = {
           remoteId: body.id,
-          shape: type === 'circle' ? 'circle' : type === 'rectangle' ? 'rectangle' : 'polygon',
+          shape: type === 'circle' ? 'circle' : type === 'rectangle' ? 'rectangle' : type === 'wedge' ? 'wedge' : 'polygon',
           x: body.position.x,
           y: body.position.y,
           color: body.render.fillStyle,
@@ -712,6 +815,9 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
         else if (type === 'rectangle') {
           bodyData.width = body.bounds.max.x - body.bounds.min.x
           bodyData.height = body.bounds.max.y - body.bounds.min.y
+        } else if (type === 'wedge') {
+          bodyData.width = body.customParams.width
+          bodyData.wedgeAngle = body.customParams.wedgeAngle
         } else {
           bodyData.sides = body.vertices.length
           bodyData.radius = 30
@@ -767,7 +873,7 @@ const PhysicsCanvas = forwardRef(({ selectedTool, onBodySelect, isPlaying, onEng
       return
     }
 
-    if (['circle', 'rectangle', 'triangle', 'ground', 'wall'].includes(selectedTool)) {
+    if (['circle', 'rectangle', 'triangle', 'wedge', 'ground', 'wall'].includes(selectedTool)) {
       addShapeAt(selectedTool, x, y)
       return
     }

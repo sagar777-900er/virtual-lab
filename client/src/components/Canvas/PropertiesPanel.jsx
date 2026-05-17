@@ -147,6 +147,7 @@ const PropertiesPanel = ({ selectedBody, engine, onUpdateBody }) => {
         width: selectedBody.customParams?.width || 10,
         height: selectedBody.customParams?.height || 10,
         sides: selectedBody.customParams?.sides || 3,
+        wedgeAngle: selectedBody.customParams?.wedgeAngle || 30,
         velocityX: selectedBody.velocity.x,
         velocityY: selectedBody.velocity.y,
       })
@@ -332,6 +333,24 @@ const PropertiesPanel = ({ selectedBody, engine, onUpdateBody }) => {
                         <span className="text-emerald-400 font-bold">{localProps.sides || 3}</span>
                       </div>
                       <input type="range" min="3" max="12" step="1" value={localProps.sides || 3} onChange={(e) => handlePropChange('sides', e.target.value)} className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:rounded-full" />
+                    </div>
+                  </>
+                )}
+                {cp.shape === 'wedge' && (
+                  <>
+                    <div>
+                      <div className="flex justify-between text-[10px] text-zinc-400 mb-1">
+                        <span>Width</span>
+                        <span className="text-emerald-400 font-bold">{(localProps.width || 100).toFixed(0)}</span>
+                      </div>
+                      <input type="range" min="20" max="500" step="1" value={localProps.width || 100} onChange={(e) => handlePropChange('width', e.target.value)} className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:rounded-full" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[10px] text-zinc-400 mb-1">
+                        <span>Wedge Angle (Degrees)</span>
+                        <span className="text-emerald-400 font-bold">{(localProps.wedgeAngle || 30).toFixed(0)}°</span>
+                      </div>
+                      <input type="range" min="5" max="85" step="1" value={localProps.wedgeAngle || 30} onChange={(e) => handlePropChange('wedgeAngle', e.target.value)} className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:rounded-full" />
                     </div>
                   </>
                 )}

@@ -4,6 +4,7 @@ const Toolbar = ({ selectedTool, onToolSelect, showAnalytics, onUndo, onRedo, on
     { id: 'circle', icon: 'radio_button_unchecked', label: 'Circle' },
     { id: 'rectangle', icon: 'check_box_outline_blank', label: 'Box' },
     { id: 'triangle', icon: 'change_history', label: 'Polygon' },
+    { id: 'wedge', icon: 'signal_cellular_4_bar', label: 'Wedge' },
     { id: 'ground', icon: 'horizontal_rule', label: 'Ground' },
     { id: 'wall', icon: 'vertical_align_center', label: 'Wall' },
     { id: 'constraint', icon: 'link', label: 'Rope' },
@@ -14,7 +15,7 @@ const Toolbar = ({ selectedTool, onToolSelect, showAnalytics, onUndo, onRedo, on
     { id: 'analyze', icon: 'insights', label: 'Analyze' },
   ]
 
-  const shapes = ['circle', 'rectangle', 'triangle', 'ground', 'wall']
+  const shapes = ['circle', 'rectangle', 'triangle', 'wedge', 'ground', 'wall']
   const handleDragStart = (e, toolId) => {
     e.dataTransfer.setData('shapeType', toolId)
     e.dataTransfer.effectAllowed = 'move'
