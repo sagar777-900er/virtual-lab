@@ -218,6 +218,24 @@ app.post('/api/experiments', async (req, res) => {
   }
 })
 
+app.delete('/api/experiments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (isMongoConnected) {
+      await Experiment.findByIdAndDelete(id);
+      res.json({ success: true });
+    } else {
+      const data = await fs.readFile(EXPERIMENTS_FILE, 'utf-8').catch(() => '[]');
+      let experiments = JSON.parse(data);
+      experiments = experiments.filter(e => e._id !== id);
+      await fs.writeFile(EXPERIMENTS_FILE, JSON.stringify(experiments, null, 2));
+      res.json({ success: true });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/rooms', (req, res) => {
   const roomList = []
   for (const [code, room] of rooms.entries()) {

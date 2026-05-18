@@ -83,6 +83,7 @@ const PropertiesPanel = ({ selectedBody, engine, onUpdateBody }) => {
 
   const [activeTab, setActiveTab] = useState('physics')
   const [localProps, setLocalProps] = useState({})
+  const [attachedConstraints, setAttachedConstraints] = useState([])
 
   useEffect(() => {
     if (!engine) return
@@ -151,8 +152,26 @@ const PropertiesPanel = ({ selectedBody, engine, onUpdateBody }) => {
         velocityX: selectedBody.velocity.x,
         velocityY: selectedBody.velocity.y,
       })
+
+      if (engine) {
+        const constraints = Matter.Composite.allConstraints(engine.world).filter(c => 
+          (c.bodyA === selectedBody || c.bodyB === selectedBody) && c.label !== 'Mouse Constraint'
+        );
+        setAttachedConstraints(constraints.map(c => ({ id: c.id, stiffness: c.stiffness })));
+      }
+    } else {
+      setAttachedConstraints([]);
     }
-  }, [selectedBody])
+  }, [selectedBody, engine])
+
+  const handleConstraintChange = (id, val) => {
+    if (!engine) return;
+    const constraint = Matter.Composite.allConstraints(engine.world).find(c => c.id === id);
+    if (constraint) {
+      constraint.stiffness = parseFloat(val);
+      setAttachedConstraints(prev => prev.map(c => c.id === id ? { ...c, stiffness: constraint.stiffness } : c));
+    }
+  }
 
   const handlePropChange = (property, value, isNumeric = true) => {
     if (selectedBody && onUpdateBody) {
@@ -278,6 +297,23 @@ const PropertiesPanel = ({ selectedBody, engine, onUpdateBody }) => {
                   </div>
                   <input type="range" min="0" max="1.5" step="0.01" value={localProps.restitution || 0} onChange={(e) => handlePropChange('restitution', e.target.value)} className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:rounded-full" />
                 </div>
+
+                {attachedConstraints.length > 0 && (
+                  <div className="pt-4 border-t border-white/10 mt-4 space-y-3">
+                    <h4 className="text-[10px] text-purple-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px]">waves</span> Attached Springs
+                    </h4>
+                    {attachedConstraints.map(c => (
+                      <div key={c.id}>
+                        <div className="flex justify-between text-[10px] text-zinc-400 mb-1">
+                          <span>Stiffness (k)</span>
+                          <span className="text-purple-400 font-bold">{c.stiffness.toFixed(3)}</span>
+                        </div>
+                        <input type="range" min="0.001" max="0.2" step="0.001" value={c.stiffness} onChange={(e) => handleConstraintChange(c.id, e.target.value)} className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:rounded-full" />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

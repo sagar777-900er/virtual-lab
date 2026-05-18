@@ -22,7 +22,7 @@ const SimulationControls = ({ isPlaying, onTogglePlay, onReload, engine }) => {
   }
 
   return (
-    <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-[rgba(14,14,14,0.6)] backdrop-blur-[12px] border border-white/10 shadow-[inset_0px_1px_2px_rgba(255,255,255,0.05),_0_0_20px_rgba(168,85,247,0.1)] p-2 flex gap-4 items-center rounded-sm z-[1000]">
+    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-[rgba(14,14,14,0.6)] backdrop-blur-[12px] border border-white/10 border-b-0 rounded-t-lg shadow-[inset_0px_1px_2px_rgba(255,255,255,0.05),_0_0_20px_rgba(168,85,247,0.1)] p-2 flex gap-4 items-center z-[1000]">
       
       {/* Playback Controls */}
       <div className="flex gap-1 px-4 border-r border-white/10">

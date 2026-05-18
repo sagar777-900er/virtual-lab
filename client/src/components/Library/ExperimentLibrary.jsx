@@ -29,9 +29,10 @@ const TEMPLATE_PROJECTILE = {
 
 const TEMPLATE_COLLISION = {
   bodies: [
-    { id: 1, x: 400, y: 550, isStatic: true, label: "Platform", customParams: null },
-    { id: 2, x: 100, y: 515, isStatic: false, angle: 0, velocity: { x: 10, y: 0 }, customParams: { shape: 'rectangle', width: 50, height: 50, color: '#10b981', restitution: 1, friction: 0, frictionAir: 0, mass: 10 } },
-    { id: 3, x: 700, y: 515, isStatic: false, angle: 0, velocity: { x: -10, y: 0 }, customParams: { shape: 'circle', radius: 25, color: '#8b5cf6', restitution: 1, friction: 0, frictionAir: 0, mass: 10 } }
+    { id: 1, x: 300, y: 550, isStatic: true, label: "Platform", customParams: null },
+    { id: 4, x: 500, y: 550, isStatic: true, label: "Platform", customParams: null },
+    { id: 2, x: 250, y: 515, isStatic: false, angle: 0, velocity: { x: 10, y: 0 }, customParams: { shape: 'circle', radius: 25, color: '#10b981', restitution: 1, friction: 0, frictionAir: 0, mass: 10 } },
+    { id: 3, x: 550, y: 515, isStatic: false, angle: 0, velocity: { x: -10, y: 0 }, customParams: { shape: 'circle', radius: 25, color: '#8b5cf6', restitution: 1, friction: 0, frictionAir: 0, mass: 10 } }
   ]
 };
 
@@ -108,6 +109,23 @@ const ExperimentLibrary = ({ onClose, onOpenLobby, onExport, onSave, onLoad }) =
         console.warn('DB Fetch failed:', err)
       })
   }, [])
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this experiment?')) {
+      try {
+        const res = await fetch(`http://localhost:3001/api/experiments/${id}`, {
+          method: 'DELETE',
+        })
+        if (res.ok) {
+          setExperiments(prev => prev.filter(exp => exp.id !== id))
+        } else {
+          console.error('Failed to delete experiment')
+        }
+      } catch (err) {
+        console.error('Delete error:', err)
+      }
+    }
+  }
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -236,6 +254,9 @@ const ExperimentLibrary = ({ onClose, onOpenLobby, onExport, onSave, onLoad }) =
                 <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-6 z-20" onClick={() => exp.stateData && onLoad(exp.stateData)}>
                   <button onClick={(e) => { e.stopPropagation(); exp.stateData && onLoad(exp.stateData); }} className="w-full py-3 bg-purple-600 text-white text-xs font-black tracking-widest uppercase rounded-sm shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500 active:scale-95 transition-all cursor-pointer">LOAD STATE</button>
                   <button onClick={(e) => { e.stopPropagation(); exp.isDB && onExport(exp.stateData); }} className="w-full py-3 bg-white/5 border border-white/10 text-white text-xs font-bold tracking-widest uppercase rounded-sm hover:bg-white/10 hover:border-purple-500/30 active:scale-95 transition-all cursor-pointer">EXPORT AS JSON</button>
+                  {exp.isDB && (
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(exp.id); }} className="w-full py-3 bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold tracking-widest uppercase rounded-sm active:scale-95 transition-all cursor-pointer border border-red-500/30">DELETE</button>
+                  )}
                 </div>
               </div>
 
